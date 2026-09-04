@@ -9,10 +9,6 @@ export const site = {
     "Next Point Coffee Co. is the easy and delicious way to raise money for your club. Premium coffee. Purpose-driven. Profits that power your goals.",
   contactEmail: "info@nextpointcoffee.com",
   establishedYear: "2026",
-  roaster: {
-    name: "Jittery Joe's Coffee Roasting Company",
-    location: "Athens, Georgia",
-  },
 };
 
 export interface Product {

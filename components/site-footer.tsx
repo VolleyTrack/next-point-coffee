@@ -33,9 +33,6 @@ export function SiteFooter() {
                 {site.contactEmail}
               </a>
             </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Roasted by {site.roaster.name}, {site.roaster.location}.
-            </p>
           </div>
         </div>
 

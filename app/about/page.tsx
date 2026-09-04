@@ -17,8 +17,7 @@ export default function AboutPage() {
         <p>
           Our first roast, <span className="font-semibold text-np-cream">First Serve</span>,
           is a medium roast built to help you start strong — balanced and smooth, with notes of
-          caramel, toasted nut, and milk chocolate. It&apos;s roasted and packaged in partnership
-          with {site.roaster.name} in {site.roaster.location}, in small batches.
+          caramel, toasted nut, and milk chocolate, roasted in small batches.
         </p>
         <p>
           We&apos;re just getting started. Second Wind and Half Caff are brewing next, and every

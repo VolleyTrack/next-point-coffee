@@ -26,8 +26,7 @@ export default function ShopPage() {
           <h2 className="text-2xl font-black text-np-cream">First Serve — up close</h2>
           <p className="mt-3 text-sm text-muted-foreground">
             100% Arabica, medium roast, whole bean. Balanced and smooth with notes of caramel,
-            toasted nut, and milk chocolate. Roasted and packaged in partnership with Jittery
-            Joe&apos;s Coffee Roasting Company in Athens, Georgia.
+            toasted nut, and milk chocolate.
           </p>
           <div className="mt-6">
             <WaitlistForm ctaLabel="Notify Me at Launch" context="shop-first-serve" />
