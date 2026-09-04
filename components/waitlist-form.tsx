@@ -18,6 +18,7 @@ export function WaitlistForm({
 }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [alreadySubscribed, setAlreadySubscribed] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -30,6 +31,8 @@ export function WaitlistForm({
         body: JSON.stringify({ email, context }),
       });
       if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
+      setAlreadySubscribed(Boolean(data.alreadySubscribed));
       setStatus("success");
       setEmail("");
     } catch {
@@ -41,7 +44,9 @@ export function WaitlistForm({
     return (
       <div className="flex items-center gap-2 rounded-md border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
         <CheckCircle className="h-4 w-4" />
-        You&apos;re on the list. We&apos;ll email you the second we launch.
+        {alreadySubscribed
+          ? "You're already on the list — we'll be in touch at launch."
+          : "You're on the list. We'll email you the second we launch."}
       </div>
     );
   }
