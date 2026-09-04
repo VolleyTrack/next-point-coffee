@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --np-black: 20 8% 9%;        /* near-black label background */
+    --np-cream: 42 38% 91%;      /* warm ivory */
+    --np-gold: 38 42% 52%;       /* metallic gold/mustard accent */
+    --np-gold-light: 38 55% 65%;
+    --np-green: 150 25% 30%;     /* Second Wind (dark roast) */
+    --np-blue: 205 35% 40%;      /* Half Caff */
+
+    --background: var(--np-black);
+    --foreground: var(--np-cream);
+    --primary: var(--np-gold);
+    --primary-foreground: var(--np-black);
+    --card: 20 8% 12%;
+    --card-foreground: var(--np-cream);
+    --border: 38 20% 25%;
+    --input: 38 20% 25%;
+    --ring: 38 42% 52%;
+    --secondary: 20 8% 16%;
+    --secondary-foreground: 42 38% 91%;
+    --accent: 20 8% 16%;
+    --accent-foreground: 42 38% 91%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 42 38% 91%;
+    --popover: 20 8% 12%;
+    --popover-foreground: 42 38% 91%;
+    --muted: 20 8% 16%;
+    --muted-foreground: 42 15% 65%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "ss01";
+  }
+}
+
+@layer utilities {
+  .text-gold {
+    color: hsl(var(--np-gold));
+  }
+  .bg-gold {
+    background-color: hsl(var(--np-gold));
+  }
+  .border-gold {
+    border-color: hsl(var(--np-gold));
+  }
+  .bg-np-cream {
+    background-color: hsl(var(--np-cream));
+  }
+  .text-np-cream {
+    color: hsl(var(--np-cream));
+  }
+  .bg-np-black {
+    background-color: hsl(var(--np-black));
+  }
+  .tracking-widest-plus {
+    letter-spacing: 0.25em;
+  }
+}
