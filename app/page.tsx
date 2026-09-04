@@ -13,12 +13,12 @@ export default function HomePage() {
     <div>
       {/* Hero */}
       <section className="border-b border-gold/20 bg-np-black">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-20 md:grid-cols-2 md:py-28">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-14 sm:py-20 md:grid-cols-2 md:py-28">
           <div>
             <p className="mb-4 text-xs font-semibold uppercase tracking-widest-plus text-gold">
               Est. {site.establishedYear} &middot; Coming Soon
             </p>
-            <h1 className="text-5xl font-black leading-[1.05] tracking-tight text-np-cream sm:text-6xl">
+            <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-np-cream sm:text-5xl md:text-6xl md:leading-[1.05]">
               {"You Can't Change the Last Point."}
               <span className="block text-gold">Own the Next.</span>
             </h1>
@@ -70,7 +70,7 @@ export default function HomePage() {
                 { icon: TrendingUp, label: "High Profit", sub: "simple to sell" },
                 { icon: Heart, label: "Real Impact", sub: "funds your season" },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-lg border border-gold/20 p-5">
+                <div key={stat.label} className="rounded-lg border border-gold/20 p-4 sm:p-5">
                   <stat.icon className="h-5 w-5 text-gold" />
                   <p className="mt-3 text-xl font-black text-np-cream">{stat.label}</p>
                   <p className="text-xs text-muted-foreground">{stat.sub}</p>
