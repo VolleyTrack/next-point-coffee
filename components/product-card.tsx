@@ -1,7 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RoastDots } from "@/components/roast-dots";
+import { BuyButton } from "@/components/buy-button";
+import { WaitlistForm } from "@/components/waitlist-form";
 import type { Product } from "@/lib/site";
+import { storeLive } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const accentBar: Record<Product["accent"], string> = {
@@ -33,6 +36,17 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="flex items-center justify-between border-t border-gold/10 pt-4">
           <RoastDots level={product.roastLevel} />
           <span className="text-xs text-muted-foreground">{product.netWeight}</span>
+        </div>
+
+        <div className="pt-2">
+          {product.purchasable && storeLive ? (
+            <BuyButton slug={product.slug} label={`Buy Now — $${(product.priceCents / 100).toFixed(2)}`} />
+          ) : (
+            <WaitlistForm
+              ctaLabel="Notify Me at Launch"
+              context={`shop-${product.slug}`}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

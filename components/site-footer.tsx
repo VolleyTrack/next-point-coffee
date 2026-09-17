@@ -5,7 +5,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-gold/20 bg-np-black">
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           <div>
             <div className="text-lg font-black text-np-cream">
               NEXT <span className="text-gold">POINT</span>
@@ -23,6 +23,15 @@ export function SiteFooter() {
               <li><Link href="/fundraising" className="hover:text-gold">Team Fundraising</Link></li>
               <li><Link href="/about" className="hover:text-gold">Our Story</Link></li>
               <li><Link href="/contact" className="hover:text-gold">Contact</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-gold">Legal</h3>
+            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              <li><Link href="/legal/terms" className="hover:text-gold">Terms of Service</Link></li>
+              <li><Link href="/legal/privacy" className="hover:text-gold">Privacy Policy</Link></li>
+              <li><Link href="/legal/shipping-returns" className="hover:text-gold">Shipping & Returns</Link></li>
             </ul>
           </div>
 

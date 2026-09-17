@@ -11,16 +11,25 @@ export const site = {
   establishedYear: "2026",
 };
 
+// Master switch: keep false until Stripe keys + approved label are both ready.
+// Flip to true (env var NEXT_PUBLIC_STORE_LIVE=true in Vercel) to accept real orders.
+export const storeLive = process.env.NEXT_PUBLIC_STORE_LIVE === "true";
+
+// Flat shipping fee in cents, charged as a separate Stripe line item.
+export const flatShippingCents = 650; // $6.50 placeholder — update once you have a real carrier quote
+
 export interface Product {
   slug: string;
   name: string;
   roast: string;
-  roastLevel: number;
+  roastLevel: number; // out of 5
   tag: string;
   accent: "gold" | "green" | "blue";
   tastingNotes: string;
   available: boolean;
+  purchasable: boolean;
   netWeight: string;
+  priceCents: number; // $20.00 = 2000
 }
 
 export const products: Product[] = [
@@ -33,7 +42,9 @@ export const products: Product[] = [
     accent: "gold",
     tastingNotes: "Balanced and smooth with notes of caramel, toasted nut, and milk chocolate.",
     available: true,
+    purchasable: true,
     netWeight: "12 OZ (341g)",
+    priceCents: 2000,
   },
   {
     slug: "second-wind",
@@ -43,8 +54,10 @@ export const products: Product[] = [
     tag: "Bold. Rich. Strong.",
     accent: "green",
     tastingNotes: "Bold and rich — built for the comeback. Finish strong.",
-    available: false,
+    available: true,
+    purchasable: true,
     netWeight: "12 OZ (341g)",
+    priceCents: 2000,
   },
   {
     slug: "half-caff",
@@ -55,7 +68,9 @@ export const products: Product[] = [
     accent: "blue",
     tastingNotes: "All the flavor, half the caffeine. All focus.",
     available: false,
+    purchasable: false,
     netWeight: "12 OZ (341g)",
+    priceCents: 2000,
   },
 ];
 
