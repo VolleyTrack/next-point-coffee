@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Loader2 } from "lucide-react";
 
-export default function OrderConfirmedPage() {
+function OrderConfirmedContent() {
   const params = useSearchParams();
   const sessionId = params.get("session_id");
   const [status, setStatus] = useState<"loading" | "found" | "not_found">("loading");
@@ -48,5 +48,19 @@ export default function OrderConfirmedPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function OrderConfirmedPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[70vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gold" />
+        </div>
+      }
+    >
+      <OrderConfirmedContent />
+    </Suspense>
   );
 }
