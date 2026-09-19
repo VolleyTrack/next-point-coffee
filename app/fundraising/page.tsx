@@ -4,7 +4,7 @@ import { DollarSign, Award, Users, Heart } from "lucide-react";
 
 const whyPoints = [
   { icon: Award, title: "Premium Quality", body: "Expertly crafted coffee your supporters will love." },
-  { icon: DollarSign, title: "High Profit", body: "Earn $4.00 for every unit your club sells." },
+  { icon: DollarSign, title: "High Profit", body: "Earn TBD per bag sold — details coming soon." },
   { icon: Users, title: "Easy Fundraising", body: "Simple to sell. Big impact for your team." },
   { icon: Heart, title: "Supports Your Goals", body: "Every purchase helps fuel your success." },
 ];
@@ -22,8 +22,8 @@ export default function FundraisingPage() {
 
           <div className="mt-8 inline-flex flex-col items-start rounded-lg border border-gold/40 bg-np-black px-6 py-5">
             <span className="text-xs uppercase tracking-widest-plus text-muted-foreground">Earn</span>
-            <span className="text-4xl font-black text-gold">$4.00</span>
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">per unit sold</span>
+            <span className="text-4xl font-black text-gold">TBD</span>
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">per bag sold</span>
           </div>
         </div>
       </section>

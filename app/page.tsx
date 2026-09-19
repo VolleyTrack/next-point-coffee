@@ -65,7 +65,7 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { icon: DollarSign, label: "$4.00", sub: "earned per unit sold" },
+                { icon: DollarSign, label: "TBD", sub: "earned per bag sold" },
                 { icon: Users, label: "Any Club", sub: "teams, schools, groups" },
                 { icon: TrendingUp, label: "High Profit", sub: "simple to sell" },
                 { icon: Heart, label: "Real Impact", sub: "funds your season" },

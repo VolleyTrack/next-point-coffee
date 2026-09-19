@@ -22,14 +22,14 @@ export interface Product {
   slug: string;
   name: string;
   roast: string;
-  roastLevel: number; // out of 5
+  roastLevel: number;
   tag: string;
   accent: "gold" | "green" | "blue";
   tastingNotes: string;
   available: boolean;
   purchasable: boolean;
   netWeight: string;
-  priceCents: number; // $20.00 = 2000
+  priceCents: number;
 }
 
 export const products: Product[] = [
@@ -78,5 +78,5 @@ export const howItWorks = [
   { step: 1, title: "Commit", description: "Your club signs up and we provide everything you need to succeed." },
   { step: 2, title: "Promote", description: "Share with friends, family, and fans using our easy marketing tools." },
   { step: 3, title: "Sell", description: "Customers order their favorite coffee online or in person." },
-  { step: 4, title: "Earn", description: "Your club earns $4.00 for every unit sold." },
+  { step: 4, title: "Earn", description: "Your club earns TBD for every bag sold—details coming soon." },
 ];
