@@ -10,7 +10,7 @@ export default function ShopPage() {
         <p className="mt-4 text-muted-foreground">
           {storeLive
             ? "First Serve and Second Wind are ready to order now. Half Caff is brewing next."
-            : "First Serve and Second Wind are almost here — Half Caff is next up after that. Join the list and we'll email you the moment checkout opens."}
+            : "First Serve and Second Wind are almost here - Half Caff is next up after that. Join the list and we'll email you the moment checkout opens."}
         </p>
       </div>
 

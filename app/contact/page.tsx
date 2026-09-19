@@ -44,7 +44,7 @@ export default function ContactPage() {
       {status === "success" ? (
         <div className="mt-8 flex items-center gap-2 rounded-md border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
           <CheckCircle className="h-4 w-4" />
-          Thanks — we got your message and will follow up soon.
+          Thanks - we got your message and will follow up soon.
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
