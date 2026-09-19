@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { addSignup } from "@/lib/newsletter";
+import { notifyNewSignup } from "@/lib/mailer";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -9,6 +10,10 @@ export async function POST(request: Request) {
 
   try {
     const { alreadySubscribed } = await addSignup(body.email, body.context ?? "general");
+    if (!alreadySubscribed) {
+      // Fire-and-forget — never let email delivery block or fail the signup response.
+      notifyNewSignup(body.email, body.context ?? "general");
+    }
     return NextResponse.json({ success: true, alreadySubscribed });
   } catch (err) {
     console.error("Waitlist signup failed:", err);

@@ -36,7 +36,7 @@ export default function HomePage() {
           <div className="relative mx-auto w-full max-w-sm">
             <div className="overflow-hidden rounded-lg border border-gold/30 shadow-2xl shadow-black/50">
               <Image
-                src="https://g.tlcdn.com/view/0c9364a42a8e430e80c92660e13f0273.png"
+                src="https://g.tlcdn.com/gen/73404613aca4401c84c48d756a5b0cfc.png"
                 alt="Next Point Coffee Co. First Serve label"
                 width={1254}
                 height={1254}
