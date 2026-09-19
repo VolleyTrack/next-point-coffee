@@ -19,20 +19,13 @@ export default function AboutPage() {
         </p>
       </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-8 md:grid-cols-3">
+      <div className="mt-14 grid grid-cols-1 gap-8 md:grid-cols-2">
         <div className="rounded-lg border border-gold/20 p-6">
           <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">The roast</p>
           <h2 className="mt-2 text-xl font-black text-np-cream">First Serve &amp; Second Wind</h2>
           <p className="mt-3 text-sm text-muted-foreground">
             First Serve is the medium that starts the day - brown sugar, toasted almond, light citrus. Second Wind is
             the dark roast for the comeback. Half Caff comes after that.
-          </p>
-        </div>
-        <div className="rounded-lg border border-gold/20 p-6">
-          <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">How it&apos;s made</p>
-          <h2 className="mt-2 text-xl font-black text-np-cream">Roasted with a partner</h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Bags are roasted and packed in partnership with {site.roasterPartner}. 12 oz, 100% Arabica, whole bean.
           </p>
         </div>
         <div className="rounded-lg border border-gold/20 p-6">
