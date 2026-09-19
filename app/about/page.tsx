@@ -16,8 +16,8 @@ export default function AboutPage() {
         </p>
         <p>
           Our first roast, <span className="font-semibold text-np-cream">First Serve</span>,
-          is a medium roast built to help you start strong — balanced and smooth, with notes of
-          caramel, toasted nut, and milk chocolate, roasted in small batches.
+          is a well-balanced medium roast built to help you start strong — brown sugar sweetness
+          accented by toasted almonds and light citrus, roasted in small batches.
         </p>
         <p>
           We&apos;re just getting started. Second Wind and Half Caff are brewing next, and every

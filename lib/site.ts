@@ -22,14 +22,14 @@ export interface Product {
   slug: string;
   name: string;
   roast: string;
-  roastLevel: number;
+  roastLevel: number; // out of 5
   tag: string;
   accent: "gold" | "green" | "blue";
   tastingNotes: string;
   available: boolean;
   purchasable: boolean;
   netWeight: string;
-  priceCents: number;
+  priceCents: number; // $20.00 = 2000
 }
 
 export const products: Product[] = [
@@ -40,7 +40,7 @@ export const products: Product[] = [
     roastLevel: 3,
     tag: "Start Strong.",
     accent: "gold",
-    tastingNotes: "Balanced and smooth with notes of caramel, toasted nut, and milk chocolate.",
+    tastingNotes: "Well-balanced medium roast. Brown sugar sweetness accented by toasted almonds and light citrus.",
     available: true,
     purchasable: true,
     netWeight: "12 OZ (341g)",
