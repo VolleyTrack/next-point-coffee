@@ -7,7 +7,10 @@ let transporter: Transporter | null = null;
 function getTransporter(): Transporter | null {
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) return null;
+  if (!user || !pass) {
+    console.warn("Signup email skipped: GMAIL_USER or GMAIL_APP_PASSWORD is not set.");
+    return null;
+  }
 
   if (!transporter) {
     transporter = nodemailer.createTransport({
@@ -18,39 +21,46 @@ function getTransporter(): Transporter | null {
   return transporter;
 }
 
-export async function notifyNewSignup(email: string, context: string): Promise<void> {
+function notifyAddress(): string | undefined {
+  return process.env.NOTIFY_EMAIL || process.env.GMAIL_USER;
+}
+
+export async function notifyNewSignup(
+  email: string,
+  context: string,
+  alreadySubscribed = false
+): Promise<void> {
   const t = getTransporter();
-  const to = process.env.GMAIL_USER;
-  if (!t || !to) {
-    // Not configured yet — silently skip so signups never fail because of this.
-    return;
-  }
+  const to = notifyAddress();
+  if (!t || !to) return;
 
   try {
     await t.sendMail({
       from: `"Next Point Coffee" <${process.env.GMAIL_USER}>`,
       to,
-      subject: `New launch signup: ${email}`,
-      text: `New newsletter signup!\n\nEmail: ${email}\nSource: ${context}\nTime: ${new Date().toLocaleString()}`,
+      subject: alreadySubscribed
+        ? `Waitlist again: ${email}`
+        : `New launch signup: ${email}`,
+      text: `New newsletter signup\n\nEmail: ${email}\nSource: ${context}\nAlready on list: ${alreadySubscribed}\nTime: ${new Date().toISOString()}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px;">
-          <h2 style="color:#1a1a1a;">New Launch Signup 🎉</h2>
+          <h2 style="color:#1a1a1a;">${alreadySubscribed ? "Repeat waitlist submit" : "New launch signup"}</h2>
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Source:</strong> ${context}</p>
+          <p><strong>Already on list:</strong> ${alreadySubscribed ? "yes" : "no"}</p>
           <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-          <p style="color:#888; font-size:12px; margin-top:24px;">Next Point Coffee Co. — automated notification</p>
+          <p style="color:#888; font-size:12px; margin-top:24px;">Next Point Coffee Co. automated notification</p>
         </div>
       `,
     });
   } catch (err) {
-    // Never let an email failure break the signup flow.
     console.error("Failed to send signup notification email:", err);
   }
 }
 
 export async function notifyContactForm(name: string, email: string, message: string): Promise<void> {
   const t = getTransporter();
-  const to = process.env.GMAIL_USER;
+  const to = notifyAddress();
   if (!t || !to) return;
 
   try {

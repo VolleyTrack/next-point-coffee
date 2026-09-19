@@ -10,10 +10,8 @@ export async function POST(request: Request) {
 
   try {
     const { alreadySubscribed } = await addSignup(body.email, body.context ?? "general");
-    if (!alreadySubscribed) {
-      // Fire-and-forget — never let email delivery block or fail the signup response.
-      notifyNewSignup(body.email, body.context ?? "general");
-    }
+    // Await so Vercel does not freeze the function before Gmail sends.
+    await notifyNewSignup(body.email, body.context ?? "general", alreadySubscribed);
     return NextResponse.json({ success: true, alreadySubscribed });
   } catch (err) {
     console.error("Waitlist signup failed:", err);
