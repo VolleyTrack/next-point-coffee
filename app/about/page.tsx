@@ -10,7 +10,7 @@ export default function AboutPage() {
         <p>{site.mission}</p>
         <p>
           Next Point Coffee Co. is a Florida company founded by {site.founder}. It exists for people who do not live in
-          the last play \u2014 athletes, coaches, and everyday competitors who treat the next point like it is the only one
+          the last play - athletes, coaches, and everyday competitors who treat the next point like it is the only one
           that counts.
         </p>
         <p>
@@ -24,7 +24,7 @@ export default function AboutPage() {
           <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">The roast</p>
           <h2 className="mt-2 text-xl font-black text-np-cream">First Serve &amp; Second Wind</h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            First Serve is the medium that starts the day \u2014 brown sugar, toasted almond, light citrus. Second Wind is
+            First Serve is the medium that starts the day - brown sugar, toasted almond, light citrus. Second Wind is
             the dark roast for the comeback. Half Caff comes after that.
           </p>
         </div>

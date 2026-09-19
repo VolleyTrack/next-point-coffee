@@ -6,12 +6,12 @@ export const site = {
     "Great days aren't built on the last point. They're built on the next one. Next Point Coffee Co. is for the athletes, the leaders, and the everyday competitors who choose to focus forward, fuel up, and own what's next.",
   fundraiserHook: "Fuel Your Team. Fund Your Season.",
   fundraiserBlurb:
-    "Premium coffee people actually drink. You promote the link. We roast, pack, and ship. Clubs earn $3 a bag. Nonprofits earn $5 a bag. Bags will retail $18\u2013$22 when we go live.",
+    "Premium coffee people actually drink. You promote the link. We roast, pack, and ship. Clubs earn $3 a bag. Nonprofits earn $5 a bag. Bags will retail $18-$22 when we go live.",
   contactEmail: "info@nextpointcoffee.com",
   establishedYear: "2026",
   clubEarningsPerBag: 3,
   nonprofitEarningsPerBag: 5,
-  bagPriceRange: "$18\u2013$22",
+  bagPriceRange: "$18-$22",
   roasterPartner: "Jittery Joe's Coffee Roasting Company, Athens, Georgia",
   founder: "Ryan Mullen",
 };
@@ -21,7 +21,7 @@ export const site = {
 export const storeLive = process.env.NEXT_PUBLIC_STORE_LIVE === "true";
 
 // Flat shipping fee in cents, charged as a separate Stripe line item.
-export const flatShippingCents = 650; // $6.50 placeholder \u2014 update once you have a real carrier quote
+export const flatShippingCents = 650; // $6.50 placeholder - update once you have a real carrier quote
 
 export interface Product {
   slug: string;
@@ -58,7 +58,7 @@ export const products: Product[] = [
     roastLevel: 4,
     tag: "Bold. Rich. Strong.",
     accent: "green",
-    tastingNotes: "Bold and rich \u2014 built for the comeback. Finish strong.",
+    tastingNotes: "Bold and rich - built for the comeback. Finish strong.",
     available: true,
     purchasable: true,
     netWeight: "12 OZ (341g)",

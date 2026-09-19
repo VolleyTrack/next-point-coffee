@@ -3,7 +3,7 @@ import { site, howItWorks, products } from "@/lib/site";
 import { DollarSign, Award, Users, Heart } from "lucide-react";
 
 const whyPoints = [
-  { icon: Award, title: "Premium Quality", body: "First Serve and Second Wind \u2014 coffee supporters will actually drink." },
+  { icon: Award, title: "Premium Quality", body: "First Serve and Second Wind - coffee supporters will actually drink." },
   {
     icon: DollarSign,
     title: "Clear Earnings",
@@ -79,7 +79,7 @@ export default function FundraisingPage() {
           {products.map((p) => (
             <div key={p.slug} className="rounded-lg border border-gold/20 p-5">
               <h3 className="font-bold text-np-cream">
-                {p.name} <span className="text-muted-foreground">\u2014 {p.roast}</span>
+                {p.name} <span className="text-muted-foreground">- {p.roast}</span>
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">{p.tastingNotes}</p>
             </div>

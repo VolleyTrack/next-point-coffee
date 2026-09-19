@@ -41,7 +41,7 @@ export function WaitlistForm({
   }
 
   const successMessage = alreadySubscribed
-    ? "You're already on the list \u2014 we'll be in touch at launch."
+    ? "You're already on the list - we'll be in touch at launch."
     : context.startsWith("fundraising")
       ? "You're on the fundraiser list. We'll email the agreement when campaigns open."
       : "You're on the First Serve list. We'll email you when checkout opens.";
