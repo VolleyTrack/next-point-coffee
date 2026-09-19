@@ -40,13 +40,17 @@ export function WaitlistForm({
     }
   }
 
+  const successMessage = alreadySubscribed
+    ? "You're already on the list \u2014 we'll be in touch at launch."
+    : context.startsWith("fundraising")
+      ? "You're on the fundraiser list. We'll email the agreement when campaigns open."
+      : "You're on the First Serve list. We'll email you when checkout opens.";
+
   if (status === "success") {
     return (
       <div className="flex items-center gap-2 rounded-md border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
-        <CheckCircle className="h-4 w-4" />
-        {alreadySubscribed
-          ? "You're already on the list — we'll be in touch at launch."
-          : "You're on the list. We'll email you the second we launch."}
+        <CheckCircle className="h-4 w-4 shrink-0" />
+        {successMessage}
       </div>
     );
   }

@@ -7,7 +7,7 @@ import { site, products } from "@/lib/site";
 import { ArrowRight, DollarSign, Users, Heart, TrendingUp } from "lucide-react";
 
 export default function HomePage() {
-  const featured = products.find((p) => p.available)!;
+  const featured = products.filter((p) => p.available);
 
   return (
     <div>
@@ -16,7 +16,7 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-14 sm:py-20 md:grid-cols-2 md:py-28">
           <div>
             <p className="mb-4 text-xs font-semibold uppercase tracking-widest-plus text-gold">
-              Est. {site.establishedYear} &middot; Coming Soon
+              Est. {site.establishedYear} &middot; First bags almost here
             </p>
             <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-np-cream sm:text-5xl md:text-6xl md:leading-[1.05]">
               {"You Can't Change the Last Point."}
@@ -65,10 +65,10 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { icon: DollarSign, label: "TBD", sub: "earned per bag sold" },
+                { icon: DollarSign, label: "$3 / $5", sub: "club / nonprofit per bag" },
                 { icon: Users, label: "Any Club", sub: "teams, schools, groups" },
-                { icon: TrendingUp, label: "High Profit", sub: "simple to sell" },
-                { icon: Heart, label: "Real Impact", sub: "funds your season" },
+                { icon: TrendingUp, label: site.bagPriceRange, sub: "expected bag price at launch" },
+                { icon: Heart, label: "We Ship", sub: "you never store beans" },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-lg border border-gold/20 p-4 sm:p-5">
                   <stat.icon className="h-5 w-5 text-gold" />
@@ -81,19 +81,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured product */}
+      {/* Featured products */}
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="mb-8 flex items-end justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Available First</p>
-            <h2 className="text-3xl font-black text-np-cream">Meet {featured.name}</h2>
+            <h2 className="text-3xl font-black text-np-cream">Meet the lineup</h2>
           </div>
           <Link href="/shop" className="text-sm font-semibold text-gold hover:underline">
             See all coffees &rarr;
           </Link>
         </div>
-        <div className="max-w-md">
-          <ProductCard product={featured} />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {featured.map((product) => (
+            <ProductCard key={product.slug} product={product} />
+          ))}
         </div>
       </section>
     </div>

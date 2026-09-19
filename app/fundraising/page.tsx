@@ -3,10 +3,14 @@ import { site, howItWorks, products } from "@/lib/site";
 import { DollarSign, Award, Users, Heart } from "lucide-react";
 
 const whyPoints = [
-  { icon: Award, title: "Premium Quality", body: "Expertly crafted coffee your supporters will love." },
-  { icon: DollarSign, title: "High Profit", body: "Earn TBD per bag sold — details coming soon." },
-  { icon: Users, title: "Easy Fundraising", body: "Simple to sell. Big impact for your team." },
-  { icon: Heart, title: "Supports Your Goals", body: "Every purchase helps fuel your success." },
+  { icon: Award, title: "Premium Quality", body: "First Serve and Second Wind \u2014 coffee supporters will actually drink." },
+  {
+    icon: DollarSign,
+    title: "Clear Earnings",
+    body: `Clubs earn $${site.clubEarningsPerBag} a bag. Nonprofits earn $${site.nonprofitEarningsPerBag} a bag.`,
+  },
+  { icon: Users, title: "Easy Fundraising", body: "Share a link. We handle checkout, roasting, packing, and shipping." },
+  { icon: Heart, title: "Funds the Season", body: "Earnings paid within 30 days after the campaign closes." },
 ];
 
 export default function FundraisingPage() {
@@ -20,11 +24,22 @@ export default function FundraisingPage() {
           </h1>
           <p className="mt-4 max-w-xl text-muted-foreground">{site.fundraiserBlurb}</p>
 
-          <div className="mt-8 inline-flex flex-col items-start rounded-lg border border-gold/40 bg-np-black px-6 py-5">
-            <span className="text-xs uppercase tracking-widest-plus text-muted-foreground">Earn</span>
-            <span className="text-4xl font-black text-gold">TBD</span>
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">per bag sold</span>
+          <div className="mt-8 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-gold/40 bg-np-black px-6 py-5">
+              <span className="text-xs uppercase tracking-widest-plus text-muted-foreground">Clubs & teams</span>
+              <p className="text-4xl font-black text-gold">${site.clubEarningsPerBag}</p>
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">per bag sold</span>
+            </div>
+            <div className="rounded-lg border border-gold/40 bg-np-black px-6 py-5">
+              <span className="text-xs uppercase tracking-widest-plus text-muted-foreground">Nonprofits</span>
+              <p className="text-4xl font-black text-gold">${site.nonprofitEarningsPerBag}</p>
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">per bag sold</span>
+            </div>
           </div>
+          <p className="mt-4 max-w-xl text-xs text-muted-foreground">
+            Bags expected to retail {site.bagPriceRange} at launch. No guaranteed total. A coffee purchase is not
+            automatically a tax-deductible gift.
+          </p>
         </div>
       </section>
 
@@ -59,26 +74,38 @@ export default function FundraisingPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="text-2xl font-black text-np-cream">Three Great Blends</h2>
+        <h2 className="text-2xl font-black text-np-cream">The coffees they will sell</h2>
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {products.map((p) => (
             <div key={p.slug} className="rounded-lg border border-gold/20 p-5">
               <h3 className="font-bold text-np-cream">
-                {p.name} <span className="text-muted-foreground">— {p.roast}</span>
+                {p.name} <span className="text-muted-foreground">\u2014 {p.roast}</span>
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">{p.tastingNotes}</p>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 rounded-lg border border-gold/30 bg-card p-8 text-center">
-          <h2 className="text-2xl font-black text-np-cream">Ready to get started?</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Let&apos;s fuel your team and fund your future. Drop your email and we&apos;ll reach
-            out with everything you need to launch a fundraiser.
-          </p>
-          <div className="mt-6 flex justify-center">
-            <WaitlistForm ctaLabel="Start a Fundraiser" context="fundraising-page" />
+        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="rounded-lg border border-gold/30 bg-card p-8">
+            <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Clubs & teams</p>
+            <h2 className="mt-2 text-2xl font-black text-np-cream">${site.clubEarningsPerBag} a bag</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Athletic clubs, booster clubs, schools, and travel teams. Drop your email and we will send the club agreement when we open campaigns.
+            </p>
+            <div className="mt-6">
+              <WaitlistForm ctaLabel="Start a club fundraiser" context="fundraising-club" />
+            </div>
+          </div>
+          <div className="rounded-lg border border-gold/30 bg-card p-8">
+            <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Nonprofits</p>
+            <h2 className="mt-2 text-2xl font-black text-np-cream">${site.nonprofitEarningsPerBag} a bag</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Qualifying nonprofits earn more per bag. We will send the nonprofit agreement. Only claim tax deductibility if you have confirmed it is appropriate.
+            </p>
+            <div className="mt-6">
+              <WaitlistForm ctaLabel="Start a nonprofit fundraiser" context="fundraising-nonprofit" />
+            </div>
           </div>
         </div>
       </section>
