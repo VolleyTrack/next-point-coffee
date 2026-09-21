@@ -4,6 +4,10 @@
 
 This environment could not read that repo (GitHub 404 with the available token). The campaign ledger here is still the system of record. nextpoint-books should consume the contract below rather than scrape UI.
 
+## Public URL (this site proxies books)
+
+After nextpoint-books is deployed with `basePath: "/admin/books"`, Next.js rewrites on this marketing site send `/admin/books` (and `/admin/books/:path*`) to `BOOKS_ORIGIN` (default `https://nextpoint-books.vercel.app`). Login is [https://nextpointcoffee.com/admin/books/login](https://nextpointcoffee.com/admin/books/login) using the books project's `ADMIN_PASSWORD`. `/admin/newsletter` is not rewritten.
+
 Canonical TypeScript types live in `lib/campaigns/books-contract.ts`.
 
 ## Handshake

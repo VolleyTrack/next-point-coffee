@@ -75,6 +75,13 @@ export default async function AdminPage() {
             Set up organization, athlete, and campaign together, publish the share link, and settle biweekly amounts
             owed. Public visitors request a campaign — they cannot browse a directory.
           </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Accounting lives in{" "}
+            <a href="/admin/books" className="text-gold hover:underline">
+              Next Point Coffee Books
+            </a>
+            .
+          </p>
         </div>
         <ResetDemoButton />
       </div>
@@ -261,7 +268,15 @@ export default async function AdminPage() {
       <section>
         <h2 className="text-2xl font-black text-np-cream">Books sync</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Ledger is durable here for nextpoint-books. Pull{" "}
+          Ledger is durable here for nextpoint-books. Open{" "}
+          <a href="/admin/books" className="text-gold hover:underline">
+            Next Point Coffee Books
+          </a>{" "}
+          (login at{" "}
+          <a href="/admin/books/login" className="text-gold hover:underline">
+            /admin/books/login
+          </a>
+          ). Pull{" "}
           <Link href="/api/books/export" className="text-gold hover:underline">
             /api/books/export
           </Link>

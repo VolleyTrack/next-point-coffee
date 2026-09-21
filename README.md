@@ -55,3 +55,18 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 Existing Stripe + Supabase REST for shop orders/newsletter is unchanged. Campaign Stripe checkouts attach metadata; the webhook writes the campaign ledger when those fields are present.
 
 Optional env vars are listed in `.env.example`. The accounting app is [VolleyTrack/nextpoint-books](https://github.com/VolleyTrack/nextpoint-books) (private; not readable from this environment). This repo exposes `GET /api/books/contract`, `GET /api/books/export`, and optional `BOOKS_WEBHOOK_URL` + `BOOKS_API_KEY` push. Types are in `lib/campaigns/books-contract.ts`. See `docs/books-integration.md`.
+
+## Next Point Coffee Books (hosted under this domain)
+
+Books is a separate Vercel project. Do not merge its source here. After the books app is deployed with `basePath: "/admin/books"`, this site proxies that prefix:
+
+| Path | Destination |
+| --- | --- |
+| `/admin/books` | `${BOOKS_ORIGIN}/admin/books` |
+| `/admin/books/:path*` | `${BOOKS_ORIGIN}/admin/books/:path*` (includes `/_next` assets) |
+
+- **Login:** [https://nextpointcoffee.com/admin/books/login](https://nextpointcoffee.com/admin/books/login)
+- **Password:** the books Vercel project's `ADMIN_PASSWORD` (not this site's `ADMIN_ACCESS_KEY`)
+- **Origin:** `BOOKS_ORIGIN`, default `https://nextpoint-books.vercel.app`. Rebuild after changing it.
+
+`/admin/newsletter` and `/admin/orders` stay on this app. The rewrite only matches `/admin/books`.
