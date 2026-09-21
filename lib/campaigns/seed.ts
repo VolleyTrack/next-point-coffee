@@ -12,6 +12,7 @@ export const SEED_STATE: CampaignStoreState = {
       type: "club",
       slug: "riverside-volleyball-club",
       contactEmail: "coach@riversidevc.example",
+      bagShareCents: 300,
       createdAt: "2026-08-12T14:00:00.000Z",
     },
     {
@@ -20,6 +21,7 @@ export const SEED_STATE: CampaignStoreState = {
       type: "nonprofit",
       slug: "athens-youth-foundation",
       contactEmail: "hello@athensyouth.example",
+      bagShareCents: 500,
       createdAt: "2026-08-20T15:30:00.000Z",
     },
   ],
@@ -54,7 +56,7 @@ export const SEED_STATE: CampaignStoreState = {
       name: "Maya's Season Fund",
       slug: "maya-season-fund",
       story:
-        "Help Maya cover travel, club dues, and tournament fees this club season. Every bag of Next Point coffee ships from us — Riverside earns $3 a bag.",
+        "Help Maya cover travel, club dues, and tournament fees this club season. Every bag of Next Point coffee ships from us — the club earns its configured share on each bag.",
       goalBags: 40,
       status: "live",
       createdAt: "2026-08-15T12:00:00.000Z",
@@ -80,7 +82,7 @@ export const SEED_STATE: CampaignStoreState = {
       name: "Sam's Court Time",
       slug: "sam-court-time",
       story:
-        "Athens Youth Foundation puts kids on the court who otherwise sit out. Nonprofits earn $5 a bag. Buy a roast and fund the next practice.",
+        "Athens Youth Foundation puts kids on the court who otherwise sit out. Buy a roast and fund the next practice.",
       goalBags: 50,
       status: "live",
       createdAt: "2026-08-24T12:00:00.000Z",

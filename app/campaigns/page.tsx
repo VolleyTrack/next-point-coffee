@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { listLiveCampaigns } from "@/lib/campaigns/store";
 import { formatUsd, initials } from "@/lib/campaigns/money";
-import { site } from "@/lib/site";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +13,8 @@ export default async function CampaignsIndexPage() {
       <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Live campaigns</p>
       <h1 className="mt-2 text-4xl font-black text-np-cream sm:text-5xl">Fuel a team. Own the next.</h1>
       <p className="mt-4 max-w-2xl text-muted-foreground">
-        Open a campaign, buy a bag, and the sale is attributed to that athlete. Clubs earn ${site.clubEarningsPerBag} a
-        bag. Nonprofits earn ${site.nonprofitEarningsPerBag} a bag.
+        Open a campaign, buy a bag, and the sale is attributed to that athlete. Each organization has its own bag share
+        set by NPC.
       </p>
 
       <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">

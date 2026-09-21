@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { getCampaignBySlug } from "@/lib/campaigns/store";
 import { formatUsd, initials } from "@/lib/campaigns/money";
 import { campaignAbsoluteUrl } from "@/lib/campaigns/qr";
-import { products, site, storeLive } from "@/lib/site";
+import { products, storeLive } from "@/lib/site";
 import { PurchaseForm } from "@/components/campaigns/purchase-form";
 import { QrPanel } from "@/components/campaigns/qr-panel";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
   const origin = host ? `${proto}://${host}` : undefined;
   const shareUrl = campaignAbsoluteUrl(campaign.slug, origin);
   const purchasable = products.filter((p) => p.purchasable);
-  const perBag = campaign.organization.type === "nonprofit" ? site.nonprofitEarningsPerBag : site.clubEarningsPerBag;
+  const perBag = formatUsd(campaign.organization.bagShareCents);
   const pct = Math.min(100, Math.round((campaign.bagsSold / campaign.goalBags) * 100));
   const simulated = !storeLive || !process.env.STRIPE_SECRET_KEY;
 
@@ -60,7 +60,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
             <div className="h-2.5 overflow-hidden rounded-full bg-np-black">
               <div className="h-full bg-gold" style={{ width: `${pct}%` }} />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">${perBag} of every bag goes to the organization.</p>
+            <p className="mt-2 text-xs text-muted-foreground">{perBag} of every bag goes to the organization.</p>
           </div>
         </div>
       </section>

@@ -36,13 +36,18 @@ export async function POST(request: Request) {
         const name = String(body.name ?? "").trim();
         const type = body.type === "nonprofit" ? "nonprofit" : "club";
         const contactEmail = String(body.contactEmail ?? "").trim();
+        const bagShareCents = Math.round(Number(body.bagShareDollars) * 100);
         if (!name || !contactEmail.includes("@")) {
           return NextResponse.json({ error: "Name and a valid email are required." }, { status: 400 });
+        }
+        if (!Number.isFinite(bagShareCents) || bagShareCents < 0) {
+          return NextResponse.json({ error: "Bag share ($ per bag) is required." }, { status: 400 });
         }
         const organization = await createOrganization({
           name,
           type: type as OrganizationType,
           contactEmail,
+          bagShareCents,
         });
         return NextResponse.json({ organization });
       }

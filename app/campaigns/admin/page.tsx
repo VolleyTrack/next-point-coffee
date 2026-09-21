@@ -94,27 +94,9 @@ export default async function AdminPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded-lg border border-gold/20 bg-card p-6">
-          <h2 className="text-xl font-black text-np-cream">Create organization</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Club sport or nonprofit. Sets the $3 / $5 bag share.</p>
-          <div className="mt-5">
-            <CreateOrgForm />
-          </div>
-        </div>
-        <div className="rounded-lg border border-gold/20 bg-card p-6">
-          <h2 className="text-xl font-black text-np-cream">Create athlete</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Athletes belong to one organization.</p>
-          <div className="mt-5">
-            <CreateAthleteForm organizations={orgs} />
-          </div>
-        </div>
-        <div className="rounded-lg border border-gold/20 bg-card p-6">
-          <h2 className="text-xl font-black text-np-cream">Create campaign</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Assign one athlete. Publish to go live.</p>
-          <div className="mt-5">
-            <CreateCampaignForm organizations={orgs} athletes={athletes} />
-          </div>
-        </div>
+        <CreateOrgForm />
+        <CreateAthleteForm organizations={orgs} />
+        <CreateCampaignForm organizations={orgs} athletes={athletes} />
       </section>
 
       <section>
@@ -125,6 +107,7 @@ export default async function AdminPage() {
               <tr>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Bag share</th>
                 <th className="px-4 py-3">Bags</th>
                 <th className="px-4 py-3">Owed</th>
                 <th className="px-4 py-3">Open</th>
@@ -135,6 +118,9 @@ export default async function AdminPage() {
                 <tr key={row.organization.id} className="border-t border-gold/10">
                   <td className="px-4 py-3 text-np-cream">{row.organization.name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{row.organization.type}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {formatUsd(row.organization.bagShareCents)} / bag
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{row.bagsSold}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatUsd(row.amountOwedCents)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatUsd(row.amountOpenCents)}</td>

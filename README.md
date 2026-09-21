@@ -49,7 +49,7 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 | --- | --- |
 | Campaign CRUD, publish, QR, public pages | End-user auth (demo role switcher) |
 | Durable sales ledger (local JSON, `data/campaigns-store.json`) | Stripe checkout unless `NEXT_PUBLIC_STORE_LIVE=true` and `STRIPE_SECRET_KEY` are set |
-| $3 club / $5 nonprofit owed per bag | Books UI — events export + optional webhook only |
+| Per-org bag share (set on create) | Books UI — events export + optional webhook only |
 | Biweekly payout compute / mark paid | Remote Supabase tables (SQL is in `supabase/campaigns.sql`) |
 
 Existing Stripe + Supabase REST for shop orders/newsletter is unchanged. Campaign Stripe checkouts attach metadata; the webhook writes the campaign ledger when those fields are present.

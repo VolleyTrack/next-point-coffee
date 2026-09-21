@@ -45,6 +45,11 @@ async function readFileState(): Promise<CampaignStoreState | null> {
     parsed.payouts ??= [];
     parsed.users ??= [];
     parsed.booksEvents ??= [];
+    for (const org of parsed.organizations) {
+      if (typeof org.bagShareCents !== "number") {
+        org.bagShareCents = 0;
+      }
+    }
     return parsed;
   } catch {
     return null;
@@ -240,6 +245,7 @@ export async function createOrganization(input: {
   name: string;
   type: OrganizationType;
   contactEmail: string;
+  bagShareCents: number;
 }): Promise<Organization> {
   return mutate((state) => {
     const org: Organization = {
@@ -251,6 +257,7 @@ export async function createOrganization(input: {
         input.name
       ),
       contactEmail: input.contactEmail.trim().toLowerCase(),
+      bagShareCents: Math.max(0, Math.round(input.bagShareCents)),
       createdAt: new Date().toISOString(),
     };
     state.organizations.push(org);
@@ -378,7 +385,7 @@ export async function recordSale(input: RecordSaleInput): Promise<Sale> {
       quantity,
       amountCents: product.priceCents * quantity,
       shippingCents: input.shippingCents ?? 0,
-      amountOwedCents: earningsPerBagCents(org.type) * quantity,
+      amountOwedCents: earningsPerBagCents(org) * quantity,
       currency: "usd",
       buyerName: input.buyerName.trim() || "Anonymous supporter",
       buyerEmail: input.buyerEmail.trim().toLowerCase(),

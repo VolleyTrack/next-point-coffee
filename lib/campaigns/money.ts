@@ -1,13 +1,13 @@
-import { site } from "@/lib/site";
-import type { OrganizationType } from "./types";
-
 export function formatUsd(cents: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 }
 
-export function earningsPerBagCents(type: OrganizationType): number {
-  const dollars = type === "nonprofit" ? site.nonprofitEarningsPerBag : site.clubEarningsPerBag;
-  return dollars * 100;
+export function dollarsToCents(dollars: number): number {
+  return Math.max(0, Math.round(dollars * 100));
+}
+
+export function earningsPerBagCents(org: { bagShareCents: number }): number {
+  return Math.max(0, Math.round(org.bagShareCents || 0));
 }
 
 export function slugify(value: string): string {

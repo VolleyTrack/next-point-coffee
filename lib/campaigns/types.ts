@@ -11,6 +11,8 @@ export interface Organization {
   type: OrganizationType;
   slug: string;
   contactEmail: string;
+  /** Amount NPC owes the org per bag, set manually on create — not implied by type. */
+  bagShareCents: number;
   createdAt: string;
 }
 

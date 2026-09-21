@@ -9,6 +9,7 @@ create table if not exists organizations (
   type text not null check (type in ('club', 'nonprofit')),
   slug text not null unique,
   contact_email text not null,
+  bag_share_cents integer not null,
   created_at timestamptz not null default now()
 );
 
