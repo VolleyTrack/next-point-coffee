@@ -93,7 +93,7 @@ export default async function AdminPage() {
         ))}
       </section>
 
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <section className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
         <CreateOrgForm />
         <CreateAthleteForm organizations={orgs} />
         <CreateCampaignForm organizations={orgs} athletes={athletes} />

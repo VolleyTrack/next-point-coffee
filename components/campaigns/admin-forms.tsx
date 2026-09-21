@@ -39,7 +39,7 @@ export function CreateOrgForm() {
     const name = String(fd.get("name") ?? "").trim();
     const type = fd.get("type") === "nonprofit" ? "nonprofit" : "club";
     const contactEmail = String(fd.get("contactEmail") ?? "").trim();
-    const bagShareDollars = Number(fd.get("bagShareDollars"));
+    const bagShareDollars = type === "nonprofit" ? 5 : 3;
     setStatus("loading");
     setError("");
     setOk("");
@@ -58,7 +58,7 @@ export function CreateOrgForm() {
   return (
     <form onSubmit={submit} className="flex h-full flex-col rounded-lg border border-gold/20 bg-card p-6">
       <h2 className="text-xl font-black text-np-cream">Create organization</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Club or nonprofit. Set the bag share for this org.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Club sport or nonprofit. Sets the $3 / $5 bag share.</p>
       <div className="mt-5 space-y-3">
         <div className="space-y-2">
           <FieldLabel>Organization name</FieldLabel>
@@ -67,21 +67,9 @@ export function CreateOrgForm() {
         <div className="space-y-2">
           <FieldLabel>Type</FieldLabel>
           <select name="type" defaultValue="club" className={selectClass}>
-            <option value="club">Club</option>
-            <option value="nonprofit">Nonprofit</option>
+            <option value="club">Club / team — $3 a bag</option>
+            <option value="nonprofit">Nonprofit — $5 a bag</option>
           </select>
-        </div>
-        <div className="space-y-2">
-          <FieldLabel>Bag share ($ per bag)</FieldLabel>
-          <Input
-            name="bagShareDollars"
-            type="number"
-            min={0}
-            step="0.01"
-            required
-            placeholder="e.g. 3.00"
-            className={fieldClass}
-          />
         </div>
         <div className="space-y-2">
           <FieldLabel>Contact email</FieldLabel>
@@ -210,7 +198,7 @@ export function CreateCampaignForm({
       className="flex h-full flex-col rounded-lg border border-gold/20 bg-card p-6"
     >
       <h2 className="text-xl font-black text-np-cream">Create campaign</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Assign one athlete. Publish later to go live.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Assign one athlete. Publish to go live.</p>
       <div className="mt-5 space-y-3">
         <div className="space-y-2">
           <FieldLabel>Organization</FieldLabel>
@@ -245,7 +233,14 @@ export function CreateCampaignForm({
         </div>
         <div className="space-y-2">
           <FieldLabel>Campaign name</FieldLabel>
-          <Input name="name" value={name} onChange={(e) => setName(e.target.value)} required className={fieldClass} />
+          <Input
+            name="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            placeholder="Sam's …"
+            className={fieldClass}
+          />
         </div>
         <div className="space-y-2">
           <FieldLabel>Story</FieldLabel>
@@ -263,7 +258,7 @@ export function CreateCampaignForm({
           />
         </div>
         <Button type="submit" disabled={status === "loading" || !athleteId} className="bg-gold text-np-black hover:bg-gold/90">
-          {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create campaign"}
+          {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create draft campaign"}
         </Button>
         {error && <p className="text-sm text-red-400">{error}</p>}
         {ok && <p className="text-sm text-gold">{ok}</p>}
