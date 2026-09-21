@@ -262,12 +262,15 @@ export default async function AdminPage() {
       <section>
         <h2 className="text-2xl font-black text-np-cream">Books sync</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Ledger is durable in this app. Export JSON for the books site, or POST events to{" "}
-          <code className="text-gold">BOOKS_WEBHOOK_URL</code> when set. See{" "}
+          Ledger is durable here for nextpoint-books. Pull{" "}
           <Link href="/api/books/export" className="text-gold hover:underline">
             /api/books/export
           </Link>
-          .
+          , discover{" "}
+          <Link href="/api/books/contract" className="text-gold hover:underline">
+            /api/books/contract
+          </Link>
+          , or POST events to <code className="text-gold">BOOKS_WEBHOOK_URL</code>.
         </p>
         <div className="mt-4">
           <SyncBooksButton />

@@ -4,7 +4,7 @@ import { products } from "@/lib/site";
 import { SEED_STATE } from "./seed";
 import { earningsPerBagCents, slugify } from "./money";
 import { biweeklyWindow } from "./payouts";
-import { buildSaleBooksEvent, pushBooksEvent, syncBooksEvents } from "./books";
+import { buildPayoutBooksEvent, buildSaleBooksEvent, pushBooksEvent, syncBooksEvents } from "./books";
 import type {
   Athlete,
   BooksEvent,
@@ -450,23 +450,8 @@ export async function computeCurrentPayouts(): Promise<PayoutPeriod[]> {
       for (const sale of state.sales) {
         if (saleIds.includes(sale.id)) sale.payoutPeriodId = payout.id;
       }
-      pushBooksEvent(state, {
-        id: crypto.randomUUID(),
-        type: "payout.computed",
-        version: 1,
-        occurredAt: payout.createdAt,
-        payload: {
-          payoutId: payout.id,
-          organizationId: org.id,
-          organizationName: org.name,
-          startDate: startIso,
-          endDate: endIso,
-          amountOwedCents,
-          saleIds,
-        },
-        syncStatus: "pending",
-        lastError: null,
-      });
+      const computed = buildPayoutBooksEvent(state, payout.id, "payout.computed", payout.createdAt);
+      if (computed) pushBooksEvent(state, computed);
       created.push(payout);
     }
     return created;
@@ -481,24 +466,8 @@ export async function markPayoutPaid(payoutId: string): Promise<PayoutPeriod> {
     if (!row) throw new Error("Payout not found.");
     row.status = "paid";
     row.paidAt = new Date().toISOString();
-    const org = state.organizations.find((o) => o.id === row.organizationId);
-    pushBooksEvent(state, {
-      id: crypto.randomUUID(),
-      type: "payout.paid",
-      version: 1,
-      occurredAt: row.paidAt,
-      payload: {
-        payoutId: row.id,
-        organizationId: row.organizationId,
-        organizationName: org?.name ?? null,
-        amountOwedCents: row.amountOwedCents,
-        startDate: row.startDate,
-        endDate: row.endDate,
-        saleIds: row.saleIds,
-      },
-      syncStatus: "pending",
-      lastError: null,
-    });
+    const paidEvent = buildPayoutBooksEvent(state, row.id, "payout.paid", row.paidAt);
+    if (paidEvent) pushBooksEvent(state, paidEvent);
     return { ...row };
   });
   await flushBooksSync();

@@ -1,29 +1,31 @@
-# Books integration (campaign sales ledger)
+# Books integration — nextpoint-books
 
-This app owns the **durable sales ledger** for fundraiser campaigns. An external accounting (“books”) site can consume every sale without sharing UI.
+**Target repo:** [VolleyTrack/nextpoint-books](https://github.com/VolleyTrack/nextpoint-books) (private).
 
-## What is real today
+This environment could not read that repo (GitHub 404 with the available token). The campaign ledger here is still the system of record. nextpoint-books should consume the contract below rather than scrape UI.
 
-- Every purchase writes a `Sale` row: campaign, athlete, club/nonprofit, bags, gross cents, amount NPC owes the club, payout period (once assigned), and books sync status.
-- Each mutation also appends a versioned `BooksEvent`.
-- `GET /api/books/export` returns the full ledger + payouts + events.
-- `POST /api/books/sync` (NPC admin session) retries pending events.
+Canonical TypeScript types live in `lib/campaigns/books-contract.ts`.
 
-## What is stubbed
+## Handshake
 
-- If `BOOKS_WEBHOOK_URL` is unset, events are marked `stubbed` and stay in this app. That is the prototype default.
-- If `BOOKS_WEBHOOK_URL` is set, pending events POST to that URL. Failures stay `failed` and can be retried.
+| Direction | Endpoint | Notes |
+| --- | --- | --- |
+| Discover | `GET /api/books/contract` | Source name, version, upsert keys |
+| Pull | `GET /api/books/export` | Full snapshot: orgs, athletes, campaigns, sales, payouts, outbox |
+| Push | `BOOKS_WEBHOOK_URL` | This app POSTs one `BooksEventEnvelope` per pending event |
+| Retry | `POST /api/books/sync` | NPC admin; marks `stubbed` when no webhook is set |
 
-There is no books UI in this repo.
+Optional shared secret: `BOOKS_API_KEY`. If set, pull requires `Authorization: Bearer <key>` (or `x-books-key`). Push sends the same bearer plus `X-NPC-Source` and `X-NPC-Contract-Version`.
 
-## Event envelope
+## Event envelope (push)
 
 ```json
 {
+  "source": "next-point-coffee",
+  "contractVersion": 1,
   "event": "sale.recorded",
-  "version": 1,
+  "id": "evt-sale-id",
   "occurredAt": "2026-09-21T12:00:00.000Z",
-  "id": "evt-...",
   "data": {
     "saleId": "…",
     "campaignId": "…",
@@ -33,6 +35,7 @@ There is no books UI in this repo.
     "organizationId": "…",
     "organizationName": "Riverside Volleyball Club",
     "organizationType": "club",
+    "bagShareCents": 300,
     "quantity": 2,
     "amountCents": 4000,
     "shippingCents": 0,
@@ -41,18 +44,37 @@ There is no books UI in this repo.
     "payoutPeriodId": null,
     "payoutPeriodStart": null,
     "payoutPeriodEnd": null,
+    "payoutStatus": "unassigned",
     "source": "simulated"
   }
 }
 ```
 
-Other event types: `payout.computed`, `payout.paid`.
+Other events: `payout.computed`, `payout.paid` (data is a payout record + `saleIds`).
 
-## Suggested books tables
+Upsert by `saleId` / `payoutId` / event `id`. Replays are expected.
 
-See `supabase/campaigns.sql` for a schema that can live beside the existing `orders` / `newsletter_signups` REST tables. The prototype persists to a local JSON ledger (`data/campaigns-store.json`) so it runs without Supabase credentials. Production can map these events 1:1 onto those tables.
+## Suggested books mapping
 
-## Pull vs push
+Until nextpoint-books models are visible, assume a normal AP / journal layout:
 
-1. **Pull (simplest):** books cron `GET /api/books/export` and upsert by `saleId` / `payoutId`.
-2. **Push:** set `BOOKS_WEBHOOK_URL` on this app; books exposes a receiver that acknowledges 2xx.
+| Coffee field | Books use |
+| --- | --- |
+| `organizations[]` | Vendor / payee. `bagShareCents` is the contracted per-bag liability. Type is label only. |
+| `athletes[]` / `campaigns[]` | Tracking class / dimension on every line |
+| `sales[].amountCents` | Debit cash (or Stripe clearing), credit campaign revenue |
+| `sales[].amountOwedCents` | Credit AP to the organization |
+| `payouts[]` (`open`) | Bill / settlement batch for a 14-day window |
+| `payout.paid` | Bill payment / AP clear |
+
+Do not recompute `amountOwedCents` from type. Use the posted cents; bag share can change per org.
+
+## What is stubbed here
+
+- No webhook URL → events stay `stubbed` in this app (prototype default).
+- No books UI.
+- nextpoint-books receiver is not in this repo. Point `BOOKS_WEBHOOK_URL` at something like `https://<books-host>/api/integrations/npc-campaigns/events` when that route exists.
+
+## Local schema
+
+`supabase/campaigns.sql` is the optional production table set for *this* app. Books should keep its own journals and only store foreign keys to these ids.

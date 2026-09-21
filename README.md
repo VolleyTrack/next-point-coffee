@@ -38,7 +38,7 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 
 ### Happy path
 
-1. Admin: create org → create athlete → create campaign → **Publish** (gets `/campaigns/[slug]` + QR).
+1. Admin: create org (type + **Bag share ($ per bag)**) → create athlete → create campaign → **Publish**.
 2. Buyer: open the link, buy a bag (simulated checkout writes the ledger; no Stripe required).
 3. Club / athlete dashboards show the attributed sale and amount owed.
 4. Admin: **Compute current biweekly payouts**, then **Mark paid**.
@@ -54,4 +54,4 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 
 Existing Stripe + Supabase REST for shop orders/newsletter is unchanged. Campaign Stripe checkouts attach metadata; the webhook writes the campaign ledger when those fields are present.
 
-Optional env vars are listed in `.env.example`. Set `BOOKS_WEBHOOK_URL` to push `sale.recorded` / payout events to an accounting site. See `docs/books-integration.md`.
+Optional env vars are listed in `.env.example`. The accounting app is [VolleyTrack/nextpoint-books](https://github.com/VolleyTrack/nextpoint-books) (private; not readable from this environment). This repo exposes `GET /api/books/contract`, `GET /api/books/export`, and optional `BOOKS_WEBHOOK_URL` + `BOOKS_API_KEY` push. Types are in `lib/campaigns/books-contract.ts`. See `docs/books-integration.md`.
