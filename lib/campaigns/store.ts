@@ -36,6 +36,25 @@ function cloneState(state: CampaignStoreState): CampaignStoreState {
   return structuredClone(state);
 }
 
+function migrateUserFacingCopy(state: CampaignStoreState): void {
+  for (const user of state.users) {
+    if (user.name === "NPC Admin" || user.id === "user-admin") {
+      user.name = "Next Point Coffee Admin";
+    }
+  }
+  const rewrite = (value: string) =>
+    value
+      .replaceAll("NPC Admin", "Next Point Coffee Admin")
+      .replaceAll("NPC admin", "Next Point Coffee admin")
+      .replace(/\bNPC\b/g, "Next Point Coffee");
+  for (const campaign of state.campaigns) {
+    campaign.story = rewrite(campaign.story);
+  }
+  for (const request of state.campaignRequests ?? []) {
+    request.notes = rewrite(request.notes);
+  }
+}
+
 async function readFileState(): Promise<CampaignStoreState | null> {
   try {
     const raw = await fs.readFile(dataFilePath(), "utf8");
@@ -52,6 +71,7 @@ async function readFileState(): Promise<CampaignStoreState | null> {
         org.bagShareCents = 0;
       }
     }
+    migrateUserFacingCopy(parsed);
     return parsed;
   } catch {
     return null;
@@ -69,9 +89,13 @@ async function writeFileState(state: CampaignStoreState): Promise<void> {
 }
 
 async function loadState(): Promise<CampaignStoreState> {
-  if (globalForStore.__npcCampaignStore) return globalForStore.__npcCampaignStore;
+  if (globalForStore.__npcCampaignStore) {
+    migrateUserFacingCopy(globalForStore.__npcCampaignStore);
+    return globalForStore.__npcCampaignStore;
+  }
   const fromDisk = await readFileState();
   const state = cloneState(fromDisk ?? SEED_STATE);
+  migrateUserFacingCopy(state);
   globalForStore.__npcCampaignStore = state;
   if (!fromDisk) await writeFileState(state);
   return state;
