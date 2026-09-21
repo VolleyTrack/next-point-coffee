@@ -11,7 +11,7 @@ export function PortalNav({
   users: PortalUser[];
 }) {
   const links = [
-    { href: "/campaigns", label: "Live campaigns" },
+    { href: "/campaigns", label: "Start a campaign" },
     { href: "/campaigns/portal", label: "Portal" },
     ...(user?.role === "admin" ? [{ href: "/campaigns/admin", label: "Admin" }] : []),
     ...(user?.role === "club" ? [{ href: "/campaigns/club", label: "Club" }] : []),

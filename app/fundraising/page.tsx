@@ -38,7 +38,7 @@ export default function FundraisingPage() {
             automatically a tax-deductible gift.
           </p>
           <Button asChild className="mt-6 bg-gold text-np-black hover:bg-gold/90">
-            <Link href="/campaigns">Browse live campaigns</Link>
+            <Link href="/campaigns">Request to start a campaign</Link>
           </Button>
         </div>
       </section>

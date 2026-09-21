@@ -9,7 +9,7 @@ const cards = [
     role: "admin",
     href: "/campaigns/admin",
     title: "NPC Admin",
-    body: "Create orgs, assign athletes to campaigns, publish share links + QR, track every sale, and run biweekly payouts.",
+    body: "Create org + athlete + campaign in one flow, publish share links + QR, track every sale, and run biweekly payouts.",
   },
   {
     role: "club",
@@ -21,7 +21,7 @@ const cards = [
     role: "athlete",
     href: "/campaigns/athlete",
     title: "Athlete dashboard",
-    body: "See only your campaign, progress, QR, and the bags attributed to you.",
+    body: "See only your assigned campaigns, progress toward goal, and your share link + QR. No sales ledger.",
   },
 ] as const;
 

@@ -219,6 +219,22 @@ export const SEED_STATE: CampaignStoreState = {
       athleteId: "athlete-sam",
     },
   ],
+  campaignRequests: [
+    {
+      id: "req-westside",
+      organizationName: "Westside Boosters",
+      organizationType: "club",
+      contactName: "Riley Nguyen",
+      contactEmail: "riley@westsideboosters.example",
+      phone: "555-0142",
+      city: "Columbus, OH",
+      athleteName: "Avery Cole",
+      notes: "We want a spring travel-ball fundraiser. Coach will share the link with families once NPC sets it up.",
+      status: "new",
+      createdAt: "2026-09-19T18:30:00.000Z",
+      handledAt: null,
+    },
+  ],
   booksEvents: [
     {
       id: "evt-sale-maya-1",

@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { Athlete, CampaignWithRelations, Organization } from "@/lib/campaigns/types";
+import type { CampaignRequest, CampaignWithRelations } from "@/lib/campaigns/types";
 import { Loader2 } from "lucide-react";
 
 async function adminAction(body: Record<string, unknown>) {
@@ -27,26 +27,51 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 const fieldClass = "border-gold/30 bg-np-black text-np-cream";
 const selectClass = "flex h-10 w-full rounded-md border border-gold/30 bg-np-black px-3 text-sm text-np-cream";
 
-export function CreateOrgForm() {
+export function CreateSetupForm({ initialRequest }: { initialRequest?: CampaignRequest | null }) {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
+  const [publish, setPublish] = useState(false);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const name = String(fd.get("name") ?? "").trim();
+    const organizationName = String(fd.get("organizationName") ?? "").trim();
     const type = fd.get("type") === "nonprofit" ? "nonprofit" : "club";
     const contactEmail = String(fd.get("contactEmail") ?? "").trim();
     const bagShareDollars = Number(fd.get("bagShareDollars"));
+    const athleteName = String(fd.get("athleteName") ?? "").trim();
+    const athleteEmail = String(fd.get("athleteEmail") ?? "").trim();
+    const campaignName = String(fd.get("campaignName") ?? "").trim();
+    const story = String(fd.get("story") ?? "").trim();
+    const goalBags = Number(fd.get("goalBags"));
     setStatus("loading");
     setError("");
     setOk("");
     try {
-      await adminAction({ action: "createOrganization", name, type, contactEmail, bagShareDollars });
-      setOk(`Created ${name}. A club demo user was added to the role switcher.`);
+      const data = await adminAction({
+        action: "createSetup",
+        organizationName,
+        type,
+        contactEmail,
+        bagShareDollars,
+        athleteName,
+        athleteEmail,
+        campaignName,
+        story,
+        goalBags,
+        publish,
+        requestId: initialRequest?.id,
+      });
+      const slug = data.campaign?.slug as string | undefined;
+      setOk(
+        publish && slug
+          ? `Live. Share /campaigns/${slug} — that link and QR stay public for buyers.`
+          : "Draft saved. Publish it below when you are ready to share the link."
+      );
       e.currentTarget.reset();
+      setPublish(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
@@ -56,228 +81,205 @@ export function CreateOrgForm() {
   }
 
   return (
-    <form onSubmit={submit} className="flex h-full flex-col rounded-lg border border-gold/20 bg-card p-6">
-      <h2 className="text-xl font-black text-np-cream">Create organization</h2>
+    <form onSubmit={submit} className="rounded-lg border border-gold/20 bg-card p-6">
+      <h2 className="text-xl font-black text-np-cream">Create a campaign</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Club sport or nonprofit. Set the bag share for this organization — it is not fixed by type.
+        Organization, athlete, and campaign in one place. Bag share is set on the organization — type does not lock
+        the amount.
       </p>
-      <div className="mt-5 space-y-3">
-        <div className="space-y-2">
-          <FieldLabel>Organization name</FieldLabel>
-          <Input name="name" required className={fieldClass} />
-        </div>
-        <div className="space-y-2">
-          <FieldLabel>Type</FieldLabel>
-          <select name="type" defaultValue="club" className={selectClass}>
-            <option value="club">Club sport</option>
-            <option value="nonprofit">Nonprofit</option>
-          </select>
-        </div>
-        <div className="space-y-2">
-          <FieldLabel>Bag share ($ per bag)</FieldLabel>
-          <Input
-            name="bagShareDollars"
-            type="number"
-            min={0}
-            step="0.01"
-            required
-            placeholder="e.g. 4.00"
-            className={fieldClass}
-          />
-        </div>
-        <div className="space-y-2">
-          <FieldLabel>Contact email</FieldLabel>
-          <Input name="contactEmail" type="email" required className={fieldClass} />
-        </div>
-        <Button type="submit" disabled={status === "loading"} className="bg-gold text-np-black hover:bg-gold/90">
-          {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create organization"}
-        </Button>
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        {ok && <p className="text-sm text-gold">{ok}</p>}
+      {initialRequest && (
+        <p className="mt-3 rounded-md border border-gold/30 bg-np-black px-3 py-2 text-sm text-gold">
+          Prefilling from {initialRequest.organizationName} ({initialRequest.contactName}).
+        </p>
+      )}
+
+      <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <fieldset className="space-y-3">
+          <legend className="text-xs font-semibold uppercase tracking-widest-plus text-gold">1 · Organization</legend>
+          <div className="space-y-2">
+            <FieldLabel>Organization name</FieldLabel>
+            <Input
+              name="organizationName"
+              required
+              defaultValue={initialRequest?.organizationName ?? ""}
+              className={fieldClass}
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Type</FieldLabel>
+            <select name="type" defaultValue={initialRequest?.organizationType ?? "club"} className={selectClass}>
+              <option value="club">Club sport</option>
+              <option value="nonprofit">Nonprofit</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Bag share ($ per bag)</FieldLabel>
+            <Input
+              name="bagShareDollars"
+              type="number"
+              min={0}
+              step="0.01"
+              required
+              placeholder="e.g. 4.00"
+              className={fieldClass}
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Contact email</FieldLabel>
+            <Input
+              name="contactEmail"
+              type="email"
+              required
+              defaultValue={initialRequest?.contactEmail ?? ""}
+              className={fieldClass}
+            />
+          </div>
+        </fieldset>
+
+        <fieldset className="space-y-3">
+          <legend className="text-xs font-semibold uppercase tracking-widest-plus text-gold">2 · Athlete</legend>
+          <div className="space-y-2">
+            <FieldLabel>Athlete name</FieldLabel>
+            <Input
+              name="athleteName"
+              required
+              defaultValue={initialRequest?.athleteName ?? ""}
+              className={fieldClass}
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Athlete email</FieldLabel>
+            <Input name="athleteEmail" type="email" required className={fieldClass} />
+          </div>
+        </fieldset>
+
+        <fieldset className="space-y-3">
+          <legend className="text-xs font-semibold uppercase tracking-widest-plus text-gold">3 · Campaign</legend>
+          <div className="space-y-2">
+            <FieldLabel>Campaign name</FieldLabel>
+            <Input
+              name="campaignName"
+              required
+              placeholder="Maya's Season Fund"
+              className={fieldClass}
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Story</FieldLabel>
+            <Textarea
+              name="story"
+              required
+              defaultValue={initialRequest?.notes ?? ""}
+              className={fieldClass}
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Bag goal</FieldLabel>
+            <Input name="goalBags" type="number" min={1} defaultValue={25} className={fieldClass} />
+          </div>
+        </fieldset>
       </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2 text-sm text-np-cream">
+          <input
+            type="checkbox"
+            checked={publish}
+            onChange={(e) => setPublish(e.target.checked)}
+            className="accent-gold"
+          />
+          Publish now (mint the public share link)
+        </label>
+        <Button type="submit" disabled={status === "loading"} className="bg-gold text-np-black hover:bg-gold/90">
+          {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create organization, athlete & campaign"}
+        </Button>
+      </div>
+      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+      {ok && <p className="mt-3 text-sm text-gold">{ok}</p>}
     </form>
   );
 }
 
-export function CreateAthleteForm({ organizations }: { organizations: Organization[] }) {
+export function AdminSetupSection({ requests }: { requests: CampaignRequest[] }) {
   const router = useRouter();
-  const [status, setStatus] = useState<"idle" | "loading">("idle");
-  const [error, setError] = useState("");
-  const [ok, setOk] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const selected = requests.find((r) => r.id === selectedId) ?? null;
+  const incoming = requests.filter((r) => r.status === "new");
+  const handled = requests.filter((r) => r.status === "handled");
 
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const organizationId = String(fd.get("organizationId") ?? "");
-    const name = String(fd.get("name") ?? "").trim();
-    const email = String(fd.get("email") ?? "").trim();
-    setStatus("loading");
-    setError("");
-    setOk("");
+  async function markHandled(requestId: string) {
+    setBusyId(requestId);
     try {
-      await adminAction({ action: "createAthlete", organizationId, name, email });
-      setOk(`Added ${name}. They now appear in the athlete role switcher.`);
-      e.currentTarget.reset();
+      await adminAction({ action: "markRequestHandled", requestId });
+      if (selectedId === requestId) setSelectedId(null);
       router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
     } finally {
-      setStatus("idle");
+      setBusyId(null);
     }
   }
 
   return (
-    <form onSubmit={submit} className="flex h-full flex-col rounded-lg border border-gold/20 bg-card p-6">
-      <h2 className="text-xl font-black text-np-cream">Create athlete</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Athletes belong to one organization.</p>
-      <div className="mt-5 space-y-3">
-        <div className="space-y-2">
-          <FieldLabel>Organization</FieldLabel>
-          <select name="organizationId" required defaultValue={organizations[0]?.id ?? ""} className={selectClass}>
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </select>
+    <div className="space-y-6">
+      <section className="rounded-lg border border-gold/20 bg-card p-6">
+        <h2 className="text-xl font-black text-np-cream">Incoming requests</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Public visitors cannot browse campaigns. They submit this form; you set the campaign up here.
+        </p>
+        <div className="mt-4 space-y-3">
+          {incoming.map((request) => (
+            <div
+              key={request.id}
+              className="flex flex-wrap items-start justify-between gap-3 rounded-md border border-gold/15 bg-np-black px-4 py-3"
+            >
+              <div>
+                <p className="font-semibold text-np-cream">
+                  {request.organizationName}{" "}
+                  <span className="text-xs font-normal uppercase tracking-wide text-muted-foreground">
+                    {request.organizationType === "nonprofit" ? "Nonprofit" : "Club sport"}
+                  </span>
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {request.contactName} · {request.contactEmail}
+                  {request.city ? ` · ${request.city}` : ""}
+                  {request.athleteName ? ` · athlete: ${request.athleteName}` : ""}
+                </p>
+                {request.notes && <p className="mt-2 text-sm text-np-cream">{request.notes}</p>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setSelectedId(request.id)}
+                  className="bg-gold text-np-black hover:bg-gold/90"
+                >
+                  Use in setup
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={busyId === request.id}
+                  onClick={() => markHandled(request.id)}
+                  className="border-gold/40 text-gold"
+                >
+                  {busyId === request.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Mark handled"}
+                </Button>
+              </div>
+            </div>
+          ))}
+          {incoming.length === 0 && (
+            <p className="text-sm text-muted-foreground">No new requests. The public /campaigns form lands here.</p>
+          )}
         </div>
-        <div className="space-y-2">
-          <FieldLabel>Athlete name</FieldLabel>
-          <Input name="name" required className={fieldClass} />
-        </div>
-        <div className="space-y-2">
-          <FieldLabel>Athlete email</FieldLabel>
-          <Input name="email" type="email" required className={fieldClass} />
-        </div>
-        <Button type="submit" disabled={status === "loading"} className="bg-gold text-np-black hover:bg-gold/90">
-          {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create athlete"}
-        </Button>
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        {ok && <p className="text-sm text-gold">{ok}</p>}
-      </div>
-    </form>
-  );
-}
-
-export function CreateCampaignForm({
-  organizations,
-  athletes,
-}: {
-  organizations: Organization[];
-  athletes: Athlete[];
-}) {
-  const router = useRouter();
-  const [organizationId, setOrganizationId] = useState(organizations[0]?.id ?? "");
-  const orgAthletes = useMemo(
-    () => athletes.filter((a) => a.organizationId === organizationId),
-    [athletes, organizationId]
-  );
-  const [athleteId, setAthleteId] = useState(orgAthletes[0]?.id ?? "");
-  const [name, setName] = useState("");
-  const [story, setStory] = useState("");
-  const [goalBags, setGoalBags] = useState(25);
-  const [status, setStatus] = useState<"idle" | "loading">("idle");
-  const [error, setError] = useState("");
-  const [ok, setOk] = useState("");
-
-  function onOrg(id: string) {
-    setOrganizationId(id);
-    const next = athletes.filter((a) => a.organizationId === id);
-    setAthleteId(next[0]?.id ?? "");
-  }
-
-  async function submit() {
-    setStatus("loading");
-    setError("");
-    setOk("");
-    try {
-      await adminAction({ action: "createCampaign", organizationId, athleteId, name, story, goalBags });
-      setOk("Draft campaign created. Publish it to mint the public link and QR.");
-      setName("");
-      setStory("");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
-    } finally {
-      setStatus("idle");
-    }
-  }
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        void submit();
-      }}
-      className="flex h-full flex-col rounded-lg border border-gold/20 bg-card p-6"
-    >
-      <h2 className="text-xl font-black text-np-cream">Create campaign</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Assign one athlete. Publish to go live.</p>
-      <div className="mt-5 space-y-3">
-        <div className="space-y-2">
-          <FieldLabel>Organization</FieldLabel>
-          <select
-            name="organizationId"
-            value={organizationId}
-            onChange={(e) => onOrg(e.target.value)}
-            className={selectClass}
-          >
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="space-y-2">
-          <FieldLabel>Assigned athlete</FieldLabel>
-          <select
-            name="athleteId"
-            value={athleteId}
-            onChange={(e) => setAthleteId(e.target.value)}
-            className={selectClass}
-          >
-            {orgAthletes.length === 0 && <option value="">Add an athlete first</option>}
-            {orgAthletes.map((athlete) => (
-              <option key={athlete.id} value={athlete.id}>
-                {athlete.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="space-y-2">
-          <FieldLabel>Campaign name</FieldLabel>
-          <Input
-            name="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            placeholder="Sam's …"
-            className={fieldClass}
-          />
-        </div>
-        <div className="space-y-2">
-          <FieldLabel>Story</FieldLabel>
-          <Textarea name="story" value={story} onChange={(e) => setStory(e.target.value)} required className={fieldClass} />
-        </div>
-        <div className="space-y-2">
-          <FieldLabel>Bag goal</FieldLabel>
-          <Input
-            name="goalBags"
-            type="number"
-            min={1}
-            value={goalBags}
-            onChange={(e) => setGoalBags(Number(e.target.value))}
-            className={fieldClass}
-          />
-        </div>
-        <Button type="submit" disabled={status === "loading" || !athleteId} className="bg-gold text-np-black hover:bg-gold/90">
-          {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create draft campaign"}
-        </Button>
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        {ok && <p className="text-sm text-gold">{ok}</p>}
-      </div>
-    </form>
+        {handled.length > 0 && (
+          <p className="mt-4 text-xs text-muted-foreground">
+            {handled.length} handled request{handled.length === 1 ? "" : "s"} this demo cycle.
+          </p>
+        )}
+      </section>
+      <CreateSetupForm key={selected?.id ?? "blank"} initialRequest={selected} />
+    </div>
   );
 }
 

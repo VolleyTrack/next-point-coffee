@@ -67,6 +67,21 @@ create table if not exists payout_periods (
   paid_at timestamptz
 );
 
+create table if not exists campaign_requests (
+  id uuid primary key default gen_random_uuid(),
+  organization_name text not null,
+  organization_type text not null check (organization_type in ('club', 'nonprofit')),
+  contact_name text not null,
+  contact_email text not null,
+  phone text not null default '',
+  city text not null default '',
+  athlete_name text not null default '',
+  notes text not null default '',
+  status text not null check (status in ('new', 'handled')),
+  created_at timestamptz not null default now(),
+  handled_at timestamptz
+);
+
 create table if not exists books_events (
   id text primary key,
   type text not null,

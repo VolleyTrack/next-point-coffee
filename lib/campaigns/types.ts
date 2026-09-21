@@ -89,6 +89,23 @@ export interface BooksEvent {
   lastError: string | null;
 }
 
+export type CampaignRequestStatus = "new" | "handled";
+
+export interface CampaignRequest {
+  id: string;
+  organizationName: string;
+  organizationType: OrganizationType;
+  contactName: string;
+  contactEmail: string;
+  phone: string;
+  city: string;
+  athleteName: string;
+  notes: string;
+  status: CampaignRequestStatus;
+  createdAt: string;
+  handledAt: string | null;
+}
+
 export interface CampaignStoreState {
   organizations: Organization[];
   athletes: Athlete[];
@@ -97,6 +114,7 @@ export interface CampaignStoreState {
   payouts: PayoutPeriod[];
   users: PortalUser[];
   booksEvents: BooksEvent[];
+  campaignRequests: CampaignRequest[];
 }
 
 export interface CampaignWithRelations extends Campaign {

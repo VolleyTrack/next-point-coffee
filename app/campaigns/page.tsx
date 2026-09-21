@@ -1,67 +1,40 @@
 import Link from "next/link";
-import { listLiveCampaigns } from "@/lib/campaigns/store";
-import { formatUsd, initials } from "@/lib/campaigns/money";
-import { Badge } from "@/components/ui/badge";
+import { getPortalUser } from "@/lib/campaigns/auth";
+import { CampaignRequestForm } from "@/components/campaigns/request-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function CampaignsIndexPage() {
-  const campaigns = await listLiveCampaigns();
+  const user = await getPortalUser();
+  const isAdmin = user?.role === "admin";
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Live campaigns</p>
-      <h1 className="mt-2 text-4xl font-black text-np-cream sm:text-5xl">Fuel a team. Own the next.</h1>
-      <p className="mt-4 max-w-2xl text-muted-foreground">
-        Open a campaign, buy a bag, and the sale is attributed to that athlete. Each organization has its own bag share
-        set by NPC.
+    <div className="mx-auto max-w-2xl px-6 py-16">
+      <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Start a campaign</p>
+      <h1 className="mt-2 text-4xl font-black text-np-cream sm:text-5xl">Ask NPC to set you up.</h1>
+      <p className="mt-4 text-muted-foreground">
+        Campaigns are not an open catalog. Live share links and QR codes still work for buyers — NPC publishes those
+        after setup. Send your club or nonprofit details and we will notify the admin.
       </p>
-
-      <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-        {campaigns.map((campaign) => {
-          const pct = Math.min(100, Math.round((campaign.bagsSold / campaign.goalBags) * 100));
-          return (
-            <Link
-              key={campaign.id}
-              href={`/campaigns/${campaign.slug}`}
-              className="rounded-lg border border-gold/20 bg-card p-6 transition-colors hover:border-gold/50"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold text-sm font-black text-np-black">
-                    {initials(campaign.athlete.name)}
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-widest-plus text-muted-foreground">
-                      {campaign.organization.name}
-                    </p>
-                    <h2 className="text-xl font-black text-np-cream">{campaign.athlete.name}</h2>
-                  </div>
-                </div>
-                <Badge variant="outline" className="border-gold/50 text-gold">
-                  Live
-                </Badge>
-              </div>
-              <p className="mt-4 font-semibold text-np-cream">{campaign.name}</p>
-              <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{campaign.story}</p>
-              <div className="mt-5">
-                <div className="mb-2 flex justify-between text-xs text-muted-foreground">
-                  <span>
-                    {campaign.bagsSold} / {campaign.goalBags} bags
-                  </span>
-                  <span>{formatUsd(campaign.amountOwedCents)} for the club</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-np-black">
-                  <div className="h-full bg-gold" style={{ width: `${pct}%` }} />
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-        {campaigns.length === 0 && (
-          <p className="text-muted-foreground">No live campaigns yet. An NPC admin can publish one from the portal.</p>
-        )}
+      {isAdmin && (
+        <p className="mt-4 rounded-md border border-gold/30 bg-card px-4 py-3 text-sm text-np-cream">
+          You are signed in as NPC Admin. Incoming requests and create live on the{" "}
+          <Link href="/campaigns/admin" className="text-gold hover:underline">
+            admin dashboard
+          </Link>
+          — this page stays a request form for everyone else.
+        </p>
+      )}
+      <div className="mt-8">
+        <CampaignRequestForm />
       </div>
+      <p className="mt-8 text-sm text-muted-foreground">
+        Already a partner? Open the{" "}
+        <Link href="/campaigns/portal" className="text-gold hover:underline">
+          partner portal
+        </Link>
+        .
+      </p>
     </div>
   );
 }

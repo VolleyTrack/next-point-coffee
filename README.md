@@ -17,12 +17,12 @@ Public routes live under `/campaigns`.
 
 | Route | Who | What |
 | --- | --- | --- |
-| `/campaigns` | Public | Live campaign directory |
-| `/campaigns/[slug]` | Buyers | Athlete page, purchase, share link + QR |
+| `/campaigns` | Public | Request-to-start form (not an open campaign catalog) |
+| `/campaigns/[slug]` | Buyers | Published campaign page, purchase, share link + QR |
 | `/campaigns/portal` | Demo | Role switcher (labeled prototype — not real auth) |
-| `/campaigns/admin` | NPC Admin | Orgs, athletes, publish, ledger, biweekly payouts, books sync |
+| `/campaigns/admin` | NPC Admin | One create flow, incoming requests, publish, ledger, payouts |
 | `/campaigns/club` | Club | All athlete campaigns for that org, owed / paid |
-| `/campaigns/athlete` | Athlete | Only their campaign(s), progress, sales |
+| `/campaigns/athlete` | Athlete | Only their campaign(s), progress + share/QR — no sales list |
 | `/api/books/export` | Books | Full sales + payout ledger JSON |
 
 ### Demo users (role switcher)
@@ -38,7 +38,7 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 
 ### Happy path
 
-1. Admin: create org (type + **Bag share ($ per bag)**) → create athlete → create campaign → **Publish**.
+1. Admin: one create card (org + athlete + campaign, bag share set on the org) → **Publish**.
 2. Buyer: open the link, buy a bag (simulated checkout writes the ledger; no Stripe required).
 3. Club dashboard shows every athlete under that org. Athlete dashboard shows **only** that athlete’s assigned campaigns and progress — no sales list (no admin / “your name” rows).
 4. Admin: **Compute current biweekly payouts**, then **Mark paid**.

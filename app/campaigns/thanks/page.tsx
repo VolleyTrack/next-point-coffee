@@ -31,8 +31,8 @@ export default async function CampaignThanksPage({
             Back to the campaign
           </Link>
         )}
-        <Link href="/campaigns" className="hover:underline">
-          Browse live campaigns
+        <Link href="/shop" className="hover:underline">
+          Shop coffee
         </Link>
       </div>
     </div>

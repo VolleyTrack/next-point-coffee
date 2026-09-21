@@ -6,6 +6,8 @@ import {
   createAthlete,
   createCampaign,
   createOrganization,
+  createSetup,
+  markCampaignRequestHandled,
   markPayoutPaid,
   updateOrganization,
   publishCampaign,
@@ -73,6 +75,57 @@ export async function POST(request: Request) {
         }
         const athlete = await createAthlete({ organizationId, name, email });
         return NextResponse.json({ athlete });
+      }
+      case "createSetup": {
+        const organizationName = String(body.organizationName ?? "").trim();
+        const type = body.type === "nonprofit" ? "nonprofit" : "club";
+        const contactEmail = String(body.contactEmail ?? "").trim();
+        const bagShareCents = Math.round(Number(body.bagShareDollars) * 100);
+        const athleteName = String(body.athleteName ?? "").trim();
+        const athleteEmail = String(body.athleteEmail ?? "").trim();
+        const campaignName = String(body.campaignName ?? "").trim();
+        const story = String(body.story ?? "").trim();
+        const goalBags = Number(body.goalBags);
+        const publish = Boolean(body.publish);
+        const requestId = String(body.requestId ?? "").trim();
+        if (
+          !organizationName ||
+          !contactEmail.includes("@") ||
+          !athleteName ||
+          !athleteEmail.includes("@") ||
+          !campaignName ||
+          !story
+        ) {
+          return NextResponse.json(
+            { error: "Organization, athlete, and campaign details are all required." },
+            { status: 400 }
+          );
+        }
+        if (!Number.isFinite(bagShareCents) || bagShareCents < 0) {
+          return NextResponse.json({ error: "Bag share ($ per bag) is required." }, { status: 400 });
+        }
+        const setup = await createSetup({
+          organizationName,
+          type: type as OrganizationType,
+          contactEmail,
+          bagShareCents,
+          athleteName,
+          athleteEmail,
+          campaignName,
+          story,
+          goalBags,
+          publish,
+        });
+        if (requestId) {
+          await markCampaignRequestHandled(requestId).catch(() => undefined);
+        }
+        return NextResponse.json(setup);
+      }
+      case "markRequestHandled": {
+        const requestId = String(body.requestId ?? "");
+        if (!requestId) return NextResponse.json({ error: "requestId required." }, { status: 400 });
+        const campaignRequest = await markCampaignRequestHandled(requestId);
+        return NextResponse.json({ request: campaignRequest });
       }
       case "createCampaign": {
         const organizationId = String(body.organizationId ?? "");

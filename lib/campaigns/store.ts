@@ -12,6 +12,7 @@ import type {
   CampaignStoreState,
   CampaignWithRelations,
   Organization,
+  CampaignRequest,
   OrganizationType,
   OrgSummary,
   PayoutPeriod,
@@ -45,6 +46,7 @@ async function readFileState(): Promise<CampaignStoreState | null> {
     parsed.payouts ??= [];
     parsed.users ??= [];
     parsed.booksEvents ??= [];
+    parsed.campaignRequests ??= [];
     for (const org of parsed.organizations) {
       if (typeof org.bagShareCents !== "number") {
         org.bagShareCents = 0;
@@ -105,6 +107,7 @@ export async function resetStore(): Promise<CampaignStoreState> {
     state.payouts = next.payouts;
     state.users = next.users;
     state.booksEvents = next.booksEvents;
+    state.campaignRequests = next.campaignRequests;
     return cloneState(state);
   });
 }
@@ -347,6 +350,133 @@ export async function createAthlete(input: {
       athleteId: athlete.id,
     });
     return { ...athlete };
+  });
+}
+
+export async function listCampaignRequests(): Promise<CampaignRequest[]> {
+  const state = await loadState();
+  return (state.campaignRequests ?? [])
+    .slice()
+    .sort((a, b) => {
+      if (a.status !== b.status) return a.status === "new" ? -1 : 1;
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+}
+
+export async function createCampaignRequest(input: {
+  organizationName: string;
+  organizationType: OrganizationType;
+  contactName: string;
+  contactEmail: string;
+  phone?: string;
+  city?: string;
+  athleteName?: string;
+  notes?: string;
+}): Promise<CampaignRequest> {
+  return mutate((state) => {
+    state.campaignRequests ??= [];
+    const request: CampaignRequest = {
+      id: crypto.randomUUID(),
+      organizationName: input.organizationName.trim(),
+      organizationType: input.organizationType,
+      contactName: input.contactName.trim(),
+      contactEmail: input.contactEmail.trim().toLowerCase(),
+      phone: (input.phone ?? "").trim(),
+      city: (input.city ?? "").trim(),
+      athleteName: (input.athleteName ?? "").trim(),
+      notes: (input.notes ?? "").trim(),
+      status: "new",
+      createdAt: new Date().toISOString(),
+      handledAt: null,
+    };
+    state.campaignRequests.push(request);
+    return { ...request };
+  });
+}
+
+export async function markCampaignRequestHandled(requestId: string): Promise<CampaignRequest> {
+  return mutate((state) => {
+    const request = (state.campaignRequests ?? []).find((r) => r.id === requestId);
+    if (!request) throw new Error("Campaign request not found.");
+    request.status = "handled";
+    request.handledAt = new Date().toISOString();
+    return { ...request };
+  });
+}
+
+export async function createSetup(input: {
+  organizationName: string;
+  type: OrganizationType;
+  contactEmail: string;
+  bagShareCents: number;
+  athleteName: string;
+  athleteEmail: string;
+  campaignName: string;
+  story: string;
+  goalBags: number;
+  publish?: boolean;
+}): Promise<{ organization: Organization; athlete: Athlete; campaign: Campaign }> {
+  return mutate((state) => {
+    const now = new Date().toISOString();
+    const organization: Organization = {
+      id: crypto.randomUUID(),
+      name: input.organizationName.trim(),
+      type: input.type,
+      slug: uniqueSlug(
+        state.organizations.map((o) => o.slug),
+        input.organizationName
+      ),
+      contactEmail: input.contactEmail.trim().toLowerCase(),
+      bagShareCents: Math.max(0, Math.round(input.bagShareCents)),
+      createdAt: now,
+    };
+    const athlete: Athlete = {
+      id: crypto.randomUUID(),
+      organizationId: organization.id,
+      name: input.athleteName.trim(),
+      email: input.athleteEmail.trim().toLowerCase(),
+      createdAt: now,
+    };
+    const campaign: Campaign = {
+      id: crypto.randomUUID(),
+      organizationId: organization.id,
+      athleteId: athlete.id,
+      name: input.campaignName.trim(),
+      slug: uniqueSlug(
+        state.campaigns.map((c) => c.slug),
+        input.campaignName
+      ),
+      story: input.story.trim(),
+      goalBags: Math.max(1, Math.floor(input.goalBags) || 20),
+      status: input.publish ? "live" : "draft",
+      createdAt: now,
+      publishedAt: input.publish ? now : null,
+    };
+    state.organizations.push(organization);
+    state.athletes.push(athlete);
+    state.campaigns.push(campaign);
+    state.users.push(
+      {
+        id: crypto.randomUUID(),
+        role: "club",
+        name: `${organization.name} Manager`,
+        email: organization.contactEmail,
+        organizationId: organization.id,
+      },
+      {
+        id: crypto.randomUUID(),
+        role: "athlete",
+        name: athlete.name,
+        email: athlete.email,
+        organizationId: organization.id,
+        athleteId: athlete.id,
+      }
+    );
+    return {
+      organization: { ...organization },
+      athlete: { ...athlete },
+      campaign: { ...campaign },
+    };
   });
 }
 

@@ -3,8 +3,8 @@ import { headers } from "next/headers";
 import { getPortalUser, portalUsersForSwitcher } from "@/lib/campaigns/auth";
 import {
   listAllCampaigns,
-  listAthletes,
   listBooksEvents,
+  listCampaignRequests,
   listOrgSummaries,
   listOrganizations,
   listPayouts,
@@ -15,10 +15,8 @@ import { campaignAbsoluteUrl } from "@/lib/campaigns/qr";
 import { formatPeriodLabel } from "@/lib/campaigns/payouts";
 import { QrPanel } from "@/components/campaigns/qr-panel";
 import {
+  AdminSetupSection,
   CampaignActions,
-  CreateAthleteForm,
-  CreateCampaignForm,
-  CreateOrgForm,
   MarkPaidButton,
   PayoutActions,
   ResetDemoButton,
@@ -48,14 +46,14 @@ export default async function AdminPage() {
     );
   }
 
-  const [orgs, athletes, campaigns, sales, payouts, summaries, events] = await Promise.all([
+  const [orgs, campaigns, sales, payouts, summaries, events, requests] = await Promise.all([
     listOrganizations(),
-    listAthletes(),
     listAllCampaigns(),
     listSales(),
     listPayouts(),
     listOrgSummaries(),
     listBooksEvents(),
+    listCampaignRequests(),
   ]);
 
   const headerStore = await headers();
@@ -74,7 +72,8 @@ export default async function AdminPage() {
           <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">NPC Admin</p>
           <h1 className="mt-2 text-4xl font-black text-np-cream">Campaign operations</h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            Create organizations, assign athletes, publish shareable campaign links, and settle biweekly amounts owed.
+            Set up organization, athlete, and campaign together, publish the share link, and settle biweekly amounts
+            owed. Public visitors request a campaign — they cannot browse a directory.
           </p>
         </div>
         <ResetDemoButton />
@@ -94,11 +93,7 @@ export default async function AdminPage() {
         ))}
       </section>
 
-      <section className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
-        <CreateOrgForm />
-        <CreateAthleteForm organizations={orgs} />
-        <CreateCampaignForm organizations={orgs} athletes={athletes} />
-      </section>
+      <AdminSetupSection requests={requests} />
 
       <section>
         <h2 className="text-2xl font-black text-np-cream">Organizations</h2>

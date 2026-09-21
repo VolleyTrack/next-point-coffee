@@ -59,6 +59,10 @@ export default async function AthleteDashboardPage() {
         ))}
       </section>
 
+      {mine.length === 0 && (
+        <p className="text-sm text-muted-foreground">No campaigns assigned to you yet. NPC will publish your page when it is ready.</p>
+      )}
+
       {mine.map((campaign) => {
         const pct = Math.min(100, Math.round((campaign.bagsSold / campaign.goalBags) * 100));
         const url = campaignAbsoluteUrl(campaign.slug, origin);
