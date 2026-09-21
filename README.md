@@ -40,7 +40,7 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 
 1. Admin: create org (type + **Bag share ($ per bag)**) → create athlete → create campaign → **Publish**.
 2. Buyer: open the link, buy a bag (simulated checkout writes the ledger; no Stripe required).
-3. Club dashboard shows every athlete under that org. Athlete dashboard shows **only** that athlete’s assigned campaigns and those sales — never another athlete or the NPC admin ledger.
+3. Club dashboard shows every athlete under that org. Athlete dashboard shows **only** that athlete’s assigned campaigns and progress — no sales list (no admin / “your name” rows).
 4. Admin: **Compute current biweekly payouts**, then **Mark paid**.
 
 ### Stubbed vs real
