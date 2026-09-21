@@ -45,6 +45,14 @@ export default async function PortalPage() {
         <div className="mt-4">
           <RoleSwitcher users={users} currentUserId={user?.id} />
         </div>
+        {user?.role === "admin" && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Accounting:{" "}
+            <a href="/admin/books" className="text-gold hover:underline">
+              Next Point Coffee Books
+            </a>
+          </p>
+        )}
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">

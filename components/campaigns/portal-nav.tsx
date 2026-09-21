@@ -17,6 +17,7 @@ export function PortalNav({
     ...(user?.role === "club" ? [{ href: "/campaigns/club", label: "Club" }] : []),
     ...(user?.role === "athlete" ? [{ href: "/campaigns/athlete", label: "Athlete" }] : []),
   ];
+  const linkClass = "text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:text-gold";
 
   return (
     <div className="border-b border-gold/20 bg-card">
@@ -26,14 +27,15 @@ export function PortalNav({
             Campaigns portal
           </span>
           {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn("text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:text-gold")}
-            >
+            <Link key={link.href} href={link.href} className={cn(linkClass)}>
               {link.label}
             </Link>
           ))}
+          {user?.role === "admin" && (
+            <a href="/admin/books" className={linkClass}>
+              Books
+            </a>
+          )}
         </div>
         <RoleSwitcher users={users} currentUserId={user?.id} />
       </div>
