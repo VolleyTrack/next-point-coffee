@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.vercel
+.env
+.env.local
+.env*.local
+data/campaigns-store.json
+*.log
+.DS_Store
+tsconfig.tsbuildinfo

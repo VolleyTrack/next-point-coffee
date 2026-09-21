@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { WaitlistForm } from "@/components/waitlist-form";
+import { Button } from "@/components/ui/button";
 import { site, howItWorks, products } from "@/lib/site";
 import { DollarSign, Award, Users, Heart } from "lucide-react";
 
@@ -40,6 +42,9 @@ export default function FundraisingPage() {
             Bags expected to retail {site.bagPriceRange} at launch. No guaranteed total. A coffee purchase is not
             automatically a tax-deductible gift.
           </p>
+          <Button asChild className="mt-6 bg-gold text-np-black hover:bg-gold/90">
+            <Link href="/campaigns">Browse live campaigns</Link>
+          </Button>
         </div>
       </section>
 
