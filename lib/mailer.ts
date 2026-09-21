@@ -58,6 +58,64 @@ export async function notifyNewSignup(
   }
 }
 
+export async function notifyCampaignRequest(input: {
+  organizationName: string;
+  organizationType: string;
+  contactName: string;
+  contactEmail: string;
+  phone?: string;
+  city?: string;
+  athleteName?: string;
+  notes?: string;
+}): Promise<void> {
+  const t = getTransporter();
+  const to = notifyAddress();
+  if (!t || !to) {
+    console.info("Campaign request saved; email notify skipped (GMAIL_USER / NOTIFY_EMAIL unset).");
+    return;
+  }
+
+  try {
+    await t.sendMail({
+      from: `"Next Point Coffee" <${process.env.GMAIL_USER}>`,
+      to,
+      replyTo: input.contactEmail,
+      subject: `Campaign request: ${input.organizationName}`,
+      text: [
+        "A club or nonprofit asked Next Point Coffee to start a campaign.",
+        "",
+        `Organization: ${input.organizationName}`,
+        `Type: ${input.organizationType}`,
+        `Contact: ${input.contactName} <${input.contactEmail}>`,
+        `Phone: ${input.phone || "—"}`,
+        `City: ${input.city || "—"}`,
+        `Athlete (if named): ${input.athleteName || "—"}`,
+        "",
+        "Notes:",
+        input.notes || "(none)",
+        "",
+        "Open /campaigns/admin to set this up.",
+      ].join("\n"),
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px;">
+          <h2 style="color:#1a1a1a;">Request to start a campaign</h2>
+          <p><strong>Organization:</strong> ${input.organizationName}</p>
+          <p><strong>Type:</strong> ${input.organizationType}</p>
+          <p><strong>Contact:</strong> ${input.contactName} &lt;${input.contactEmail}&gt;</p>
+          <p><strong>Phone:</strong> ${input.phone || "—"}</p>
+          <p><strong>City:</strong> ${input.city || "—"}</p>
+          <p><strong>Athlete:</strong> ${input.athleteName || "—"}</p>
+          <p><strong>Notes:</strong></p>
+          <p style="white-space: pre-wrap;">${input.notes || "(none)"}</p>
+          <p style="color:#888; font-size:12px; margin-top:24px;">Set this up from the Next Point Coffee admin dashboard.</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("Failed to send campaign request notification:", err);
+  }
+}
+
 export async function notifyContactForm(name: string, email: string, message: string): Promise<void> {
   const t = getTransporter();
   const to = notifyAddress();

@@ -6,11 +6,9 @@ export const site = {
     "Great days aren't built on the last point. They're built on the next one. Next Point Coffee Co. is for the athletes, the leaders, and the everyday competitors who choose to focus forward, fuel up, and own what's next.",
   fundraiserHook: "Fuel Your Team. Fund Your Season.",
   fundraiserBlurb:
-    "Premium coffee people actually drink. You promote the link. We roast, pack, and ship. Clubs earn $3 a bag. Nonprofits earn $5 a bag. Bags will retail $18-$22 when we go live.",
+    "Premium coffee people actually drink. You promote the link. We roast, pack, and ship. Each partner organization earns a bag share that Next Point Coffee sets with them. Bags will retail $18-$22 when we go live.",
   contactEmail: "info@nextpointcoffee.com",
   establishedYear: "2026",
-  clubEarningsPerBag: 3,
-  nonprofitEarningsPerBag: 5,
   bagPriceRange: "$18-$22",
   roasterPartner: "Jittery Joe's Coffee Roasting Company, Athens, Georgia",
   founder: "Ryan Mullen",
@@ -98,6 +96,6 @@ export const howItWorks = [
   {
     step: 4,
     title: "Earn",
-    description: "Clubs earn $3 a bag. Nonprofits earn $5 a bag. Paid within 30 days after the campaign closes.",
+    description: "Your organization earns the bag share Next Point Coffee sets with you. Paid within 30 days after the campaign closes.",
   },
 ];

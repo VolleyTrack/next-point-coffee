@@ -11,6 +11,7 @@ const navItems = [
   { href: "/shop", label: "Shop" },
   { href: "/about", label: "Our Story" },
   { href: "/fundraising", label: "Fundraising" },
+  { href: "/campaigns", label: "Start a campaign" },
   { href: "/contact", label: "Contact" },
 ];
 

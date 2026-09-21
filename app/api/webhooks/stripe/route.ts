@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { recordOrder } from "@/lib/orders";
+import { recordSale } from "@/lib/campaigns/store";
 import type Stripe from "stripe";
 
 export async function POST(request: Request) {
@@ -29,20 +30,39 @@ export async function POST(request: Request) {
         expand: ["line_items"],
       });
 
-      await recordOrder({
-        stripe_session_id: fullSession.id,
-        customer_email: fullSession.customer_details?.email ?? "unknown",
-        customer_name: fullSession.customer_details?.name ?? null,
-        shipping_address: fullSession.customer_details?.address ?? null,
-        line_items: fullSession.line_items?.data ?? [],
-        amount_subtotal: fullSession.amount_subtotal ?? 0,
-        amount_shipping: fullSession.total_details?.amount_shipping ?? 0,
-        amount_total: fullSession.amount_total ?? 0,
-        currency: fullSession.currency ?? "usd",
-        payment_status: fullSession.payment_status ?? "unknown",
-      });
+      try {
+        await recordOrder({
+          stripe_session_id: fullSession.id,
+          customer_email: fullSession.customer_details?.email ?? "unknown",
+          customer_name: fullSession.customer_details?.name ?? null,
+          shipping_address: fullSession.customer_details?.address ?? null,
+          line_items: fullSession.line_items?.data ?? [],
+          amount_subtotal: fullSession.amount_subtotal ?? 0,
+          amount_shipping: fullSession.total_details?.amount_shipping ?? 0,
+          amount_total: fullSession.amount_total ?? 0,
+          currency: fullSession.currency ?? "usd",
+          payment_status: fullSession.payment_status ?? "unknown",
+        });
+      } catch (err) {
+        console.error("Failed to record shop order:", err);
+      }
+
+      const campaignId = fullSession.metadata?.campaignId;
+      const productSlug = fullSession.metadata?.productSlug;
+      if (campaignId && productSlug) {
+        await recordSale({
+          campaignId,
+          productSlug,
+          quantity: Number(fullSession.metadata?.quantity ?? 1),
+          buyerName: fullSession.metadata?.buyerName || fullSession.customer_details?.name || "Supporter",
+          buyerEmail: fullSession.customer_details?.email ?? "unknown",
+          source: "stripe",
+          stripeSessionId: fullSession.id,
+          shippingCents: fullSession.total_details?.amount_shipping ?? 0,
+        });
+      }
     } catch (err) {
-      console.error("Failed to record order:", err);
+      console.error("Failed to record campaign sale:", err);
     }
   }
 

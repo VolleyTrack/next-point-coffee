@@ -65,7 +65,7 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { icon: DollarSign, label: "$3 / $5", sub: "club / nonprofit per bag" },
+                { icon: DollarSign, label: "Bag share", sub: "set per organization" },
                 { icon: Users, label: "Any Club", sub: "teams, schools, groups" },
                 { icon: TrendingUp, label: site.bagPriceRange, sub: "expected bag price at launch" },
                 { icon: Heart, label: "We Ship", sub: "you never store beans" },
