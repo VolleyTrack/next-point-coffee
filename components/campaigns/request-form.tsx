@@ -48,7 +48,7 @@ export function CampaignRequestForm() {
     return (
       <div className="rounded-lg border border-gold/20 bg-card p-8">
         <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Request received</p>
-        <h2 className="mt-2 text-2xl font-black text-np-cream">NPC will set this up.</h2>
+        <h2 className="mt-2 text-2xl font-black text-np-cream">Next Point Coffee will set this up.</h2>
         <p className="mt-3 text-sm text-muted-foreground">
           We notified Next Point Coffee. An admin will create the organization, athlete, and campaign, then send you
           the share link and QR when it is live.
@@ -69,7 +69,7 @@ export function CampaignRequestForm() {
     <form onSubmit={submit} className="rounded-lg border border-gold/20 bg-card p-6 sm:p-8">
       <h2 className="text-xl font-black text-np-cream">Club / nonprofit details</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Tell NPC who you are. We do not publish an open list of live campaigns.
+        Tell Next Point Coffee who you are. We do not publish an open list of live campaigns.
       </p>
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">

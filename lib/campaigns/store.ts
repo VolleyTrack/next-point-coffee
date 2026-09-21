@@ -130,7 +130,6 @@ function hydrateCampaign(state: CampaignStoreState, campaign: Campaign): Campaig
     organization,
     athlete,
     bagsSold: sales.reduce((sum, s) => sum + s.quantity, 0),
-    amountCents: sales.reduce((sum, s) => sum + s.amountCents, 0),
     amountOwedCents: sales.reduce((sum, s) => sum + s.amountOwedCents, 0),
   };
 }
@@ -222,13 +221,44 @@ export async function getSaleById(id: string): Promise<Sale | null> {
   return state.sales.find((s) => s.id === id) ?? null;
 }
 
+/** Gross (`amountCents`) is admin-only. Partner/public receipts omit it. */
+export type SaleWithoutGross = Omit<Sale, "amountCents">;
+
+export function omitSaleGross(sale: Sale): SaleWithoutGross {
+  const { amountCents: _gross, ...rest } = sale;
+  void _gross;
+  return rest;
+}
+
+export async function listPartnerSales(filter?: {
+  organizationId?: string;
+  athleteId?: string;
+  campaignId?: string;
+}): Promise<SaleWithoutGross[]> {
+  return (await listSales(filter)).map(omitSaleGross);
+}
+
+export async function getBuyerSaleReceipt(id: string): Promise<{
+  quantity: number;
+  productName: string;
+  amountOwedCents: number;
+} | null> {
+  const sale = await getSaleById(id);
+  if (!sale) return null;
+  return {
+    quantity: sale.quantity,
+    productName: sale.productName,
+    amountOwedCents: sale.amountOwedCents,
+  };
+}
+
 /**
  * Athlete privacy: a sale is visible only when
  * 1) it is attributed to this athlete, and
  * 2) it sits on a campaign assigned to this athlete.
- * NPC admin / other athletes' rows are never included.
+ * Next Point Coffee admin / other athletes' rows are never included.
  */
-export async function listSalesForAthlete(athleteId: string): Promise<Sale[]> {
+export async function listSalesForAthlete(athleteId: string): Promise<SaleWithoutGross[]> {
   if (!athleteId) return [];
   const state = await loadState();
   const assigned = new Set(
@@ -237,7 +267,8 @@ export async function listSalesForAthlete(athleteId: string): Promise<Sale[]> {
   return state.sales
     .filter((s) => s.athleteId === athleteId && assigned.has(s.campaignId))
     .slice()
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map(omitSaleGross);
 }
 
 export async function listPayouts(organizationId?: string): Promise<PayoutPeriod[]> {
@@ -262,7 +293,6 @@ export function summarizeOrg(state: CampaignStoreState, org: Organization): OrgS
   return {
     organization: org,
     bagsSold: sales.reduce((sum, s) => sum + s.quantity, 0),
-    amountCents: sales.reduce((sum, s) => sum + s.amountCents, 0),
     amountOwedCents: owed,
     amountPaidCents: paid,
     amountOpenCents: Math.max(0, owed - paid),

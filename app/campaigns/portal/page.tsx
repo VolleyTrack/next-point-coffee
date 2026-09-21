@@ -8,7 +8,7 @@ const cards = [
   {
     role: "admin",
     href: "/campaigns/admin",
-    title: "NPC Admin",
+    title: "Next Point Coffee Admin",
     body: "Create org + athlete + campaign in one flow, publish share links + QR, track every sale, and run biweekly payouts.",
   },
   {

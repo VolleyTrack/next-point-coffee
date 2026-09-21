@@ -13,9 +13,9 @@ Canonical TypeScript types live in `lib/campaigns/books-contract.ts`.
 | Discover | `GET /api/books/contract` | Source name, version, upsert keys |
 | Pull | `GET /api/books/export` | Full snapshot: orgs, athletes, campaigns, sales, payouts, outbox |
 | Push | `BOOKS_WEBHOOK_URL` | This app POSTs one `BooksEventEnvelope` per pending event |
-| Retry | `POST /api/books/sync` | NPC admin; marks `stubbed` when no webhook is set |
+| Retry | `POST /api/books/sync` | Next Point Coffee admin; marks `stubbed` when no webhook is set |
 
-`GET /api/books/export` is **not athlete-readable**. Allowed callers: valid `BOOKS_API_KEY` (`Authorization: Bearer` or `x-books-key`), or an NPC admin portal session. Push sends the same bearer plus `X-NPC-Source` and `X-NPC-Contract-Version` when a key is set.
+`GET /api/books/export` is **not athlete-readable**. Allowed callers: valid `BOOKS_API_KEY` (`Authorization: Bearer` or `x-books-key`), or a Next Point Coffee admin portal session. Push sends the same bearer plus `X-NPC-Source` and `X-NPC-Contract-Version` when a key is set.
 
 ## Event envelope (push)
 
@@ -71,7 +71,7 @@ Do not recompute `amountOwedCents` from type. Use the posted cents; bag share ca
 
 ## Athlete sales privacy
 
-Athletes never see a sales list (no admin / “your name” rows, no other athletes). The athlete dashboard shows only assigned campaigns and bag progress. Club users see their org ledger. NPC admin sees everything.
+Athletes never see a sales list (no admin / “your name” rows, no other athletes). The athlete dashboard shows only assigned campaigns and bag progress. Club users see their org ledger (club share, not gross). Next Point Coffee admin sees everything, including gross.
 
 ## What is stubbed here
 

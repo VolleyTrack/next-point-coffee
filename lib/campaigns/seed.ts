@@ -70,7 +70,7 @@ export const SEED_STATE: CampaignStoreState = {
       name: "Jordan's Court Campaign",
       slug: "jordan-court-campaign",
       story:
-        "Jordan is raising bags for the spring showcase circuit. This campaign is still a draft — publish it from the NPC admin to go live.",
+        "Jordan is raising bags for the spring showcase circuit. This campaign is still a draft — publish it from the Next Point Coffee admin to go live.",
       goalBags: 30,
       status: "draft",
       createdAt: "2026-09-10T12:00:00.000Z",
@@ -177,7 +177,7 @@ export const SEED_STATE: CampaignStoreState = {
     {
       id: "user-admin",
       role: "admin",
-      name: "NPC Admin",
+      name: "Next Point Coffee Admin",
       email: "admin@nextpointcoffee.com",
     },
     {
@@ -229,7 +229,7 @@ export const SEED_STATE: CampaignStoreState = {
       phone: "555-0142",
       city: "Columbus, OH",
       athleteName: "Avery Cole",
-      notes: "We want a spring travel-ball fundraiser. Coach will share the link with families once NPC sets it up.",
+      notes: "We want a spring travel-ball fundraiser. Coach will share the link with families once Next Point Coffee sets it up.",
       status: "new",
       createdAt: "2026-09-19T18:30:00.000Z",
       handledAt: null,

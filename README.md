@@ -20,7 +20,7 @@ Public routes live under `/campaigns`.
 | `/campaigns` | Public | Request-to-start form (not an open campaign catalog) |
 | `/campaigns/[slug]` | Buyers | Published campaign page, purchase, share link + QR |
 | `/campaigns/portal` | Demo | Role switcher (labeled prototype — not real auth) |
-| `/campaigns/admin` | NPC Admin | One create flow, incoming requests, publish, ledger, payouts |
+| `/campaigns/admin` | Next Point Coffee Admin | One create flow, incoming requests, publish, ledger, payouts |
 | `/campaigns/club` | Club | All athlete campaigns for that org, owed / paid |
 | `/campaigns/athlete` | Athlete | Only their campaign(s), progress + share/QR — no sales list |
 | `/api/books/export` | Books | Full sales + payout ledger JSON |
@@ -29,7 +29,7 @@ Public routes live under `/campaigns`.
 
 The existing site only has an `ADMIN_ACCESS_KEY` gate for orders/newsletter — no login system. Campaigns use a cookie-based **prototype role switcher**:
 
-- **NPC Admin** — `admin@nextpointcoffee.com`
+- **Next Point Coffee Admin** — `admin@nextpointcoffee.com`
 - **Coach Rivera** — Riverside Volleyball Club
 - **Alex Kim** — Athens Youth Foundation
 - **Maya Chen** / **Jordan Hale** / **Sam Ortiz** — athletes

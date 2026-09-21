@@ -82,7 +82,7 @@ export async function notifyCampaignRequest(input: {
       replyTo: input.contactEmail,
       subject: `Campaign request: ${input.organizationName}`,
       text: [
-        "A club or nonprofit asked NPC to start a campaign.",
+        "A club or nonprofit asked Next Point Coffee to start a campaign.",
         "",
         `Organization: ${input.organizationName}`,
         `Type: ${input.organizationType}`,
@@ -107,7 +107,7 @@ export async function notifyCampaignRequest(input: {
           <p><strong>Athlete:</strong> ${input.athleteName || "—"}</p>
           <p><strong>Notes:</strong></p>
           <p style="white-space: pre-wrap;">${input.notes || "(none)"}</p>
-          <p style="color:#888; font-size:12px; margin-top:24px;">Set this up from the NPC admin dashboard.</p>
+          <p style="color:#888; font-size:12px; margin-top:24px;">Set this up from the Next Point Coffee admin dashboard.</p>
         </div>
       `,
     });

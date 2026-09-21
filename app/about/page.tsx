@@ -32,7 +32,7 @@ export default function AboutPage() {
           <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">The other scoreboard</p>
           <h2 className="mt-2 text-xl font-black text-np-cream">Fuel the season</h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Each partner organization earns a bag share NPC sets with them — not a fixed club or nonprofit rate. You
+            Each partner organization earns a bag share Next Point Coffee sets with them — not a fixed club or nonprofit rate. You
             share a link. We handle the rest. Purchases are not automatically tax-deductible.
           </p>
         </div>

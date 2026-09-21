@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getPortalUser, portalUsersForSwitcher } from "@/lib/campaigns/auth";
-import { getOrgSummary, listCampaignsForOrganization, listPayouts, listSales } from "@/lib/campaigns/store";
+import { getOrgSummary, listCampaignsForOrganization, listPayouts, listPartnerSales } from "@/lib/campaigns/store";
 import { formatUsd } from "@/lib/campaigns/money";
 import { formatPeriodLabel } from "@/lib/campaigns/payouts";
 import { RoleSwitcher } from "@/components/campaigns/role-switcher";
@@ -29,7 +29,7 @@ export default async function ClubDashboardPage() {
   const [summary, mine, sales, payouts] = await Promise.all([
     getOrgSummary(user.organizationId),
     listCampaignsForOrganization(user.organizationId),
-    listSales({ organizationId: user.organizationId }),
+    listPartnerSales({ organizationId: user.organizationId }),
     listPayouts(user.organizationId),
   ]);
 
@@ -91,8 +91,7 @@ export default async function ClubDashboardPage() {
                 <th className="px-4 py-3">When</th>
                 <th className="px-4 py-3">Athlete</th>
                 <th className="px-4 py-3">Product</th>
-                <th className="px-4 py-3">Gross</th>
-                <th className="px-4 py-3">Owed</th>
+                <th className="px-4 py-3">Club share</th>
               </tr>
             </thead>
             <tbody>
@@ -107,7 +106,6 @@ export default async function ClubDashboardPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {sale.quantity} × {sale.productName}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{formatUsd(sale.amountCents)}</td>
                     <td className="px-4 py-3 text-gold">{formatUsd(sale.amountOwedCents)}</td>
                   </tr>
                 );
@@ -141,7 +139,7 @@ export default async function ClubDashboardPage() {
               {payouts.length === 0 && (
                 <tr>
                   <td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">
-                    NPC has not opened a payout period for this window yet.
+                    Next Point Coffee has not opened a payout period for this window yet.
                   </td>
                 </tr>
               )}

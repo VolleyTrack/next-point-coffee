@@ -34,10 +34,10 @@ export default async function AdminPage() {
     const users = await portalUsersForSwitcher();
     return (
       <div className="mx-auto max-w-lg px-6 py-20">
-        <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">NPC Admin</p>
+        <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Next Point Coffee Admin</p>
         <h1 className="mt-2 text-3xl font-black text-np-cream">Switch to the admin demo user</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Prototype access only. Choose <span className="text-np-cream">NPC Admin</span> in the role switcher.
+          Prototype access only. Choose <span className="text-np-cream">Next Point Coffee Admin</span> in the role switcher.
         </p>
         <div className="mt-6">
           <RoleSwitcher users={users} currentUserId={user?.id} />
@@ -69,7 +69,7 @@ export default async function AdminPage() {
     <div className="mx-auto max-w-6xl space-y-14 px-6 py-14">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">NPC Admin</p>
+          <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Next Point Coffee Admin</p>
           <h1 className="mt-2 text-4xl font-black text-np-cream">Campaign operations</h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
             Set up organization, athlete, and campaign together, publish the share link, and settle biweekly amounts
@@ -171,7 +171,7 @@ export default async function AdminPage() {
       <section>
         <h2 className="text-2xl font-black text-np-cream">Sales ledger</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Every bag: campaign, athlete, amount, and how much NPC owes the club.
+          Every bag: campaign, athlete, gross, and how much Next Point Coffee owes the club.
         </p>
         <div className="mt-4 overflow-x-auto rounded-lg border border-gold/20">
           <table className="w-full min-w-[720px] text-left text-sm">

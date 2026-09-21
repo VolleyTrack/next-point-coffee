@@ -18,7 +18,7 @@ export function booksAuthHeaders(): Record<string, string> {
 }
 
 export function unauthorizedBooks(): NextResponse {
-  return NextResponse.json({ error: "Books API key or NPC admin session required." }, { status: 401 });
+  return NextResponse.json({ error: "Books API key or Next Point Coffee admin session required." }, { status: 401 });
 }
 
 export function isBooksKeyValid(request: Request): boolean {
@@ -32,7 +32,7 @@ export function isBooksKeyValid(request: Request): boolean {
 
 /**
  * Full ledger is never athlete-readable.
- * Allowed: valid BOOKS_API_KEY, or an NPC admin portal session.
+ * Allowed: valid BOOKS_API_KEY, or a Next Point Coffee admin portal session.
  */
 export async function canReadBooksLedger(request: Request): Promise<boolean> {
   if (isBooksKeyValid(request)) return true;

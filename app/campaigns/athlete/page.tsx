@@ -42,7 +42,7 @@ export default async function AthleteDashboardPage() {
         <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Athlete dashboard</p>
         <h1 className="mt-2 text-4xl font-black text-np-cream">{user.name}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Your assigned campaigns only. Individual sales stay on the club and NPC admin dashboards.
+          Your assigned campaigns only. Individual sales stay on the club and Next Point Coffee admin dashboards.
         </p>
       </div>
 
@@ -60,7 +60,7 @@ export default async function AthleteDashboardPage() {
       </section>
 
       {mine.length === 0 && (
-        <p className="text-sm text-muted-foreground">No campaigns assigned to you yet. NPC will publish your page when it is ready.</p>
+        <p className="text-sm text-muted-foreground">No campaigns assigned to you yet. Next Point Coffee will publish your page when it is ready.</p>
       )}
 
       {mine.map((campaign) => {
@@ -97,7 +97,7 @@ export default async function AthleteDashboardPage() {
               </div>
             ) : (
               <p className="mt-4 text-sm text-muted-foreground">
-                Draft campaigns go live when NPC publishes them. You will get a share link and QR at that point.
+                Draft campaigns go live when Next Point Coffee publishes them. You will get a share link and QR at that point.
               </p>
             )}
           </section>

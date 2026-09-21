@@ -9,7 +9,7 @@ const whyPoints = [
   {
     icon: DollarSign,
     title: "Clear Earnings",
-    body: "NPC sets a bag share with each organization. Type (club or nonprofit) does not lock the amount.",
+    body: "Next Point Coffee sets a bag share with each organization. Type (club or nonprofit) does not lock the amount.",
   },
   { icon: Users, title: "Easy Fundraising", body: "Share a link. We handle checkout, roasting, packing, and shipping." },
   { icon: Heart, title: "Funds the Season", body: "Earnings paid within 30 days after the campaign closes." },
@@ -101,7 +101,7 @@ export default function FundraisingPage() {
             <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Nonprofits</p>
             <h2 className="mt-2 text-2xl font-black text-np-cream">Nonprofit fundraiser</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Qualifying nonprofits work with NPC on a bag share. We will send the nonprofit agreement. Only claim tax
+              Qualifying nonprofits work with Next Point Coffee on a bag share. We will send the nonprofit agreement. Only claim tax
               deductibility if you have confirmed it is appropriate.
             </p>
             <div className="mt-6">

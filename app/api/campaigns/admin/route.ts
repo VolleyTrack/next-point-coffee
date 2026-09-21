@@ -27,7 +27,7 @@ async function requireAdmin() {
 
 export async function POST(request: Request) {
   if (!(await requireAdmin())) {
-    return NextResponse.json({ error: "NPC admin role required." }, { status: 401 });
+    return NextResponse.json({ error: "Next Point Coffee admin role required." }, { status: 401 });
   }
 
   const body = await request.json().catch(() => ({}));

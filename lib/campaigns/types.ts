@@ -11,7 +11,7 @@ export interface Organization {
   type: OrganizationType;
   slug: string;
   contactEmail: string;
-  /** Amount NPC owes the org per bag, set manually on create — not implied by type. */
+  /** Amount Next Point Coffee owes the org per bag, set manually on create — not implied by type. */
   bagShareCents: number;
   createdAt: string;
 }
@@ -45,6 +45,7 @@ export interface Sale {
   productSlug: string;
   productName: string;
   quantity: number;
+  /** Gross sale total. Admin-only in product UI and partner/public APIs. */
   amountCents: number;
   shippingCents: number;
   amountOwedCents: number;
@@ -121,14 +122,12 @@ export interface CampaignWithRelations extends Campaign {
   organization: Organization;
   athlete: Athlete;
   bagsSold: number;
-  amountCents: number;
   amountOwedCents: number;
 }
 
 export interface OrgSummary {
   organization: Organization;
   bagsSold: number;
-  amountCents: number;
   amountOwedCents: number;
   amountPaidCents: number;
   amountOpenCents: number;

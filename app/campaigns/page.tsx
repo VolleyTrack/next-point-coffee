@@ -11,14 +11,14 @@ export default async function CampaignsIndexPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
       <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Start a campaign</p>
-      <h1 className="mt-2 text-4xl font-black text-np-cream sm:text-5xl">Ask NPC to set you up.</h1>
+      <h1 className="mt-2 text-4xl font-black text-np-cream sm:text-5xl">Ask Next Point Coffee to set you up.</h1>
       <p className="mt-4 text-muted-foreground">
-        Campaigns are not an open catalog. Live share links and QR codes still work for buyers — NPC publishes those
+        Campaigns are not an open catalog. Live share links and QR codes still work for buyers — Next Point Coffee publishes those
         after setup. Send your club or nonprofit details and we will notify the admin.
       </p>
       {isAdmin && (
         <p className="mt-4 rounded-md border border-gold/30 bg-card px-4 py-3 text-sm text-np-cream">
-          You are signed in as NPC Admin. Incoming requests and create live on the{" "}
+          You are signed in as Next Point Coffee Admin. Incoming requests and create live on the{" "}
           <Link href="/campaigns/admin" className="text-gold hover:underline">
             admin dashboard
           </Link>
