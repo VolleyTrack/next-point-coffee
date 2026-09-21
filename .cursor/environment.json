@@ -1,0 +1,9 @@
+{
+  "$schema": "https://cursor.com/schemas/environment.schema.json",
+  "install": "npm ci && npm i -g --prefix \"$(dirname \"$(dirname \"$(which npm)\")\")\" vercel@latest",
+  "egressAllowlist": [
+    "vercel.com",
+    "api.vercel.com",
+    "mcp.vercel.com"
+  ]
+}
