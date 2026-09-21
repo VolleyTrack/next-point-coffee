@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { getPortalUser } from "./auth";
 
-/** Optional shared secret with nextpoint-books. Unset = open prototype pull. */
+/** Optional shared secret with nextpoint-books. */
 export function booksApiKey(): string | undefined {
   return process.env.BOOKS_API_KEY || undefined;
 }
@@ -17,14 +18,24 @@ export function booksAuthHeaders(): Record<string, string> {
 }
 
 export function unauthorizedBooks(): NextResponse {
-  return NextResponse.json({ error: "Books API key required." }, { status: 401 });
+  return NextResponse.json({ error: "Books API key or NPC admin session required." }, { status: 401 });
 }
 
-export function isBooksAuthorized(request: Request): boolean {
+export function isBooksKeyValid(request: Request): boolean {
   const expected = booksApiKey();
-  if (!expected) return true;
+  if (!expected) return false;
   const bearer = request.headers.get("authorization");
   const token = bearer?.toLowerCase().startsWith("bearer ") ? bearer.slice(7).trim() : "";
   const headerKey = request.headers.get("x-books-key") ?? "";
   return token === expected || headerKey === expected;
+}
+
+/**
+ * Full ledger is never athlete-readable.
+ * Allowed: valid BOOKS_API_KEY, or an NPC admin portal session.
+ */
+export async function canReadBooksLedger(request: Request): Promise<boolean> {
+  if (isBooksKeyValid(request)) return true;
+  const user = await getPortalUser();
+  return user?.role === "admin";
 }

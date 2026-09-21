@@ -15,7 +15,7 @@ Canonical TypeScript types live in `lib/campaigns/books-contract.ts`.
 | Push | `BOOKS_WEBHOOK_URL` | This app POSTs one `BooksEventEnvelope` per pending event |
 | Retry | `POST /api/books/sync` | NPC admin; marks `stubbed` when no webhook is set |
 
-Optional shared secret: `BOOKS_API_KEY`. If set, pull requires `Authorization: Bearer <key>` (or `x-books-key`). Push sends the same bearer plus `X-NPC-Source` and `X-NPC-Contract-Version`.
+`GET /api/books/export` is **not athlete-readable**. Allowed callers: valid `BOOKS_API_KEY` (`Authorization: Bearer` or `x-books-key`), or an NPC admin portal session. Push sends the same bearer plus `X-NPC-Source` and `X-NPC-Contract-Version` when a key is set.
 
 ## Event envelope (push)
 
@@ -68,6 +68,10 @@ Until nextpoint-books models are visible, assume a normal AP / journal layout:
 | `payout.paid` | Bill payment / AP clear |
 
 Do not recompute `amountOwedCents` from type. Use the posted cents; bag share can change per org.
+
+## Athlete sales privacy
+
+Athletes never see another athlete’s sales, and never see NPC-admin ledger dumps. Athlete dashboard queries use `listSalesForAthlete` / `listCampaignsForAthlete` (sale must be attributed to that athlete **and** sit on a campaign assigned to them). Club users see their org. NPC admin sees everything.
 
 ## What is stubbed here
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getPortalUser, portalUsersForSwitcher } from "@/lib/campaigns/auth";
-import { listAllCampaigns, listSales } from "@/lib/campaigns/store";
+import { listCampaignsForAthlete, listSalesForAthlete } from "@/lib/campaigns/store";
 import { formatUsd } from "@/lib/campaigns/money";
 import { campaignAbsoluteUrl } from "@/lib/campaigns/qr";
 import { QrPanel } from "@/components/campaigns/qr-panel";
@@ -26,10 +26,10 @@ export default async function AthleteDashboardPage() {
     );
   }
 
-  const campaigns = await listAllCampaigns();
-  const mine = campaigns.filter((c) => c.athleteId === user.athleteId);
-  const campaignIds = new Set(mine.map((c) => c.id));
-  const sales = (await listSales({ athleteId: user.athleteId })).filter((s) => campaignIds.has(s.campaignId));
+  const [mine, sales] = await Promise.all([
+    listCampaignsForAthlete(user.athleteId),
+    listSalesForAthlete(user.athleteId),
+  ]);
 
   const headerStore = await headers();
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
@@ -44,7 +44,9 @@ export default async function AthleteDashboardPage() {
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Athlete dashboard</p>
         <h1 className="mt-2 text-4xl font-black text-np-cream">{user.name}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Only the campaigns assigned to you, and sales on those links.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Only campaigns assigned to you. You cannot see another athlete’s sales or the NPC admin ledger.
+        </p>
       </div>
 
       <section className="grid grid-cols-2 gap-4 md:grid-cols-3">

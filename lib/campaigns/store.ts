@@ -161,6 +161,20 @@ export async function listAllCampaigns(): Promise<CampaignWithRelations[]> {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+/** Club: every campaign under that org. */
+export async function listCampaignsForOrganization(organizationId: string): Promise<CampaignWithRelations[]> {
+  return (await listAllCampaigns()).filter((c) => c.organizationId === organizationId);
+}
+
+/**
+ * Athlete privacy: only campaigns assigned to this athlete.
+ * Never return another athlete's campaign, even on the same club.
+ */
+export async function listCampaignsForAthlete(athleteId: string): Promise<CampaignWithRelations[]> {
+  if (!athleteId) return [];
+  return (await listAllCampaigns()).filter((c) => c.athleteId === athleteId);
+}
+
 export async function listUsers(): Promise<PortalUser[]> {
   const state = await loadState();
   return state.users.map((u) => ({ ...u }));
@@ -195,6 +209,30 @@ export async function listSales(filter?: {
       if (filter?.campaignId && s.campaignId !== filter.campaignId) return false;
       return true;
     })
+    .slice()
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function getSaleById(id: string): Promise<Sale | null> {
+  if (!id) return null;
+  const state = await loadState();
+  return state.sales.find((s) => s.id === id) ?? null;
+}
+
+/**
+ * Athlete privacy: a sale is visible only when
+ * 1) it is attributed to this athlete, and
+ * 2) it sits on a campaign assigned to this athlete.
+ * NPC admin / other athletes' rows are never included.
+ */
+export async function listSalesForAthlete(athleteId: string): Promise<Sale[]> {
+  if (!athleteId) return [];
+  const state = await loadState();
+  const assigned = new Set(
+    state.campaigns.filter((c) => c.athleteId === athleteId).map((c) => c.id)
+  );
+  return state.sales
+    .filter((s) => s.athleteId === athleteId && assigned.has(s.campaignId))
     .slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

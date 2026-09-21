@@ -135,6 +135,6 @@ export const BOOKS_CONTRACT_NOTES = {
   booksRepo: "https://github.com/VolleyTrack/nextpoint-books",
   pull: "GET /api/books/export",
   push: "BOOKS_WEBHOOK_URL receives BooksEventEnvelope",
-  auth: "If BOOKS_API_KEY is set, send Authorization: Bearer <key> on pull; this app sends the same bearer on push.",
+  auth: "GET /api/books/export requires BOOKS_API_KEY (Bearer) or an NPC admin session. Athletes cannot pull the ledger.",
   idempotency: "Upsert sales by saleId, payouts by payoutId, events by id.",
 } as const;

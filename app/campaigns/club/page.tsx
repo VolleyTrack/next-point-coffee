@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getPortalUser, portalUsersForSwitcher } from "@/lib/campaigns/auth";
-import { getOrgSummary, listAllCampaigns, listPayouts, listSales } from "@/lib/campaigns/store";
+import { getOrgSummary, listCampaignsForOrganization, listPayouts, listSales } from "@/lib/campaigns/store";
 import { formatUsd } from "@/lib/campaigns/money";
 import { formatPeriodLabel } from "@/lib/campaigns/payouts";
 import { RoleSwitcher } from "@/components/campaigns/role-switcher";
@@ -26,14 +26,12 @@ export default async function ClubDashboardPage() {
     );
   }
 
-  const [summary, campaigns, sales, payouts] = await Promise.all([
+  const [summary, mine, sales, payouts] = await Promise.all([
     getOrgSummary(user.organizationId),
-    listAllCampaigns(),
+    listCampaignsForOrganization(user.organizationId),
     listSales({ organizationId: user.organizationId }),
     listPayouts(user.organizationId),
   ]);
-
-  const mine = campaigns.filter((c) => c.organizationId === user.organizationId);
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 px-6 py-14">

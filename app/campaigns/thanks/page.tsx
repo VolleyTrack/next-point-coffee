@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listSales } from "@/lib/campaigns/store";
+import { getSaleById } from "@/lib/campaigns/store";
 import { formatUsd } from "@/lib/campaigns/money";
 import { CheckCircle } from "lucide-react";
 
@@ -11,8 +11,7 @@ export default async function CampaignThanksPage({
   searchParams: Promise<{ sale?: string; campaign?: string }>;
 }) {
   const params = await searchParams;
-  const sales = await listSales();
-  const sale = params.sale ? sales.find((s) => s.id === params.sale) : sales[0];
+  const sale = params.sale ? await getSaleById(params.sale) : null;
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center px-6 text-center">
