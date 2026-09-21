@@ -71,7 +71,7 @@ Do not recompute `amountOwedCents` from type. Use the posted cents; bag share ca
 
 ## Athlete sales privacy
 
-Athletes never see another athlete’s sales, and never see NPC-admin ledger dumps. Athlete dashboard queries use `listSalesForAthlete` / `listCampaignsForAthlete` (sale must be attributed to that athlete **and** sit on a campaign assigned to them). Club users see their org. NPC admin sees everything.
+Athletes never see a sales list (no admin / “your name” rows, no other athletes). The athlete dashboard shows only assigned campaigns and bag progress. Club users see their org ledger. NPC admin sees everything.
 
 ## What is stubbed here
 
