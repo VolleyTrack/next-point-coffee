@@ -310,6 +310,18 @@ export async function createOrganization(input: {
   });
 }
 
+export async function updateOrganization(input: {
+  organizationId: string;
+  bagShareCents: number;
+}): Promise<Organization> {
+  return mutate((state) => {
+    const org = state.organizations.find((o) => o.id === input.organizationId);
+    if (!org) throw new Error("Organization not found.");
+    org.bagShareCents = Math.max(0, Math.round(input.bagShareCents));
+    return { ...org };
+  });
+}
+
 export async function createAthlete(input: {
   organizationId: string;
   name: string;

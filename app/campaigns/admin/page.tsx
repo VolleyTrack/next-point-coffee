@@ -23,6 +23,7 @@ import {
   PayoutActions,
   ResetDemoButton,
   SyncBooksButton,
+  UpdateBagShareForm,
 } from "@/components/campaigns/admin-forms";
 import { Badge } from "@/components/ui/badge";
 import { RoleSwitcher } from "@/components/campaigns/role-switcher";
@@ -119,7 +120,10 @@ export default async function AdminPage() {
                   <td className="px-4 py-3 text-np-cream">{row.organization.name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{row.organization.type}</td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {formatUsd(row.organization.bagShareCents)} / bag
+                    <UpdateBagShareForm
+                      organizationId={row.organization.id}
+                      bagShareCents={row.organization.bagShareCents}
+                    />
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{row.bagsSold}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatUsd(row.amountOwedCents)}</td>

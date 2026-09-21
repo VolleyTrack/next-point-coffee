@@ -9,7 +9,7 @@ const whyPoints = [
   {
     icon: DollarSign,
     title: "Clear Earnings",
-    body: `Clubs earn $${site.clubEarningsPerBag} a bag. Nonprofits earn $${site.nonprofitEarningsPerBag} a bag.`,
+    body: "NPC sets a bag share with each organization. Type (club or nonprofit) does not lock the amount.",
   },
   { icon: Users, title: "Easy Fundraising", body: "Share a link. We handle checkout, roasting, packing, and shipping." },
   { icon: Heart, title: "Funds the Season", body: "Earnings paid within 30 days after the campaign closes." },
@@ -26,17 +26,12 @@ export default function FundraisingPage() {
           </h1>
           <p className="mt-4 max-w-xl text-muted-foreground">{site.fundraiserBlurb}</p>
 
-          <div className="mt-8 grid max-w-xl grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-gold/40 bg-np-black px-6 py-5">
-              <span className="text-xs uppercase tracking-widest-plus text-muted-foreground">Clubs & teams</span>
-              <p className="text-4xl font-black text-gold">${site.clubEarningsPerBag}</p>
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">per bag sold</span>
-            </div>
-            <div className="rounded-lg border border-gold/40 bg-np-black px-6 py-5">
-              <span className="text-xs uppercase tracking-widest-plus text-muted-foreground">Nonprofits</span>
-              <p className="text-4xl font-black text-gold">${site.nonprofitEarningsPerBag}</p>
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">per bag sold</span>
-            </div>
+          <div className="mt-8 max-w-xl rounded-lg border border-gold/40 bg-np-black px-6 py-5">
+            <span className="text-xs uppercase tracking-widest-plus text-muted-foreground">Bag share</span>
+            <p className="text-2xl font-black text-gold">Set per organization</p>
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              Club or nonprofit — amount is not fixed by type
+            </span>
           </div>
           <p className="mt-4 max-w-xl text-xs text-muted-foreground">
             Bags expected to retail {site.bagPriceRange} at launch. No guaranteed total. A coffee purchase is not
@@ -94,7 +89,7 @@ export default function FundraisingPage() {
         <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="rounded-lg border border-gold/30 bg-card p-8">
             <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Clubs & teams</p>
-            <h2 className="mt-2 text-2xl font-black text-np-cream">${site.clubEarningsPerBag} a bag</h2>
+            <h2 className="mt-2 text-2xl font-black text-np-cream">Club fundraiser</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Athletic clubs, booster clubs, schools, and travel teams. Drop your email and we will send the club agreement when we open campaigns.
             </p>
@@ -104,9 +99,10 @@ export default function FundraisingPage() {
           </div>
           <div className="rounded-lg border border-gold/30 bg-card p-8">
             <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Nonprofits</p>
-            <h2 className="mt-2 text-2xl font-black text-np-cream">${site.nonprofitEarningsPerBag} a bag</h2>
+            <h2 className="mt-2 text-2xl font-black text-np-cream">Nonprofit fundraiser</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Qualifying nonprofits earn more per bag. We will send the nonprofit agreement. Only claim tax deductibility if you have confirmed it is appropriate.
+              Qualifying nonprofits work with NPC on a bag share. We will send the nonprofit agreement. Only claim tax
+              deductibility if you have confirmed it is appropriate.
             </p>
             <div className="mt-6">
               <WaitlistForm ctaLabel="Start a nonprofit fundraiser" context="fundraising-nonprofit" />

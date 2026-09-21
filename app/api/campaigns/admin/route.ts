@@ -7,6 +7,7 @@ import {
   createCampaign,
   createOrganization,
   markPayoutPaid,
+  updateOrganization,
   publishCampaign,
   resetStore,
 } from "@/lib/campaigns/store";
@@ -49,6 +50,18 @@ export async function POST(request: Request) {
           contactEmail,
           bagShareCents,
         });
+        return NextResponse.json({ organization });
+      }
+      case "updateOrganization": {
+        const organizationId = String(body.organizationId ?? "");
+        const bagShareCents = Math.round(Number(body.bagShareDollars) * 100);
+        if (!organizationId) {
+          return NextResponse.json({ error: "organizationId required." }, { status: 400 });
+        }
+        if (!Number.isFinite(bagShareCents) || bagShareCents < 0) {
+          return NextResponse.json({ error: "Bag share ($ per bag) is required." }, { status: 400 });
+        }
+        const organization = await updateOrganization({ organizationId, bagShareCents });
         return NextResponse.json({ organization });
       }
       case "createAthlete": {

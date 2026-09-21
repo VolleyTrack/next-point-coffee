@@ -39,7 +39,7 @@ export function CreateOrgForm() {
     const name = String(fd.get("name") ?? "").trim();
     const type = fd.get("type") === "nonprofit" ? "nonprofit" : "club";
     const contactEmail = String(fd.get("contactEmail") ?? "").trim();
-    const bagShareDollars = type === "nonprofit" ? 5 : 3;
+    const bagShareDollars = Number(fd.get("bagShareDollars"));
     setStatus("loading");
     setError("");
     setOk("");
@@ -58,7 +58,9 @@ export function CreateOrgForm() {
   return (
     <form onSubmit={submit} className="flex h-full flex-col rounded-lg border border-gold/20 bg-card p-6">
       <h2 className="text-xl font-black text-np-cream">Create organization</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Club sport or nonprofit. Sets the $3 / $5 bag share.</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Club sport or nonprofit. Set the bag share for this organization — it is not fixed by type.
+      </p>
       <div className="mt-5 space-y-3">
         <div className="space-y-2">
           <FieldLabel>Organization name</FieldLabel>
@@ -67,9 +69,21 @@ export function CreateOrgForm() {
         <div className="space-y-2">
           <FieldLabel>Type</FieldLabel>
           <select name="type" defaultValue="club" className={selectClass}>
-            <option value="club">Club / team — $3 a bag</option>
-            <option value="nonprofit">Nonprofit — $5 a bag</option>
+            <option value="club">Club sport</option>
+            <option value="nonprofit">Nonprofit</option>
           </select>
+        </div>
+        <div className="space-y-2">
+          <FieldLabel>Bag share ($ per bag)</FieldLabel>
+          <Input
+            name="bagShareDollars"
+            type="number"
+            min={0}
+            step="0.01"
+            required
+            placeholder="e.g. 4.00"
+            className={fieldClass}
+          />
         </div>
         <div className="space-y-2">
           <FieldLabel>Contact email</FieldLabel>
@@ -368,6 +382,48 @@ export function MarkPaidButton({ payoutId }: { payoutId: string }) {
     >
       {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Mark paid"}
     </Button>
+  );
+}
+
+export function UpdateBagShareForm({
+  organizationId,
+  bagShareCents,
+}: {
+  organizationId: string;
+  bagShareCents: number;
+}) {
+  const router = useRouter();
+  const [status, setStatus] = useState<"idle" | "loading">("idle");
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const bagShareDollars = Number(fd.get("bagShareDollars"));
+    setStatus("loading");
+    try {
+      await adminAction({ action: "updateOrganization", organizationId, bagShareDollars });
+      router.refresh();
+    } finally {
+      setStatus("idle");
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="flex items-center gap-2">
+      <Input
+        name="bagShareDollars"
+        type="number"
+        min={0}
+        step="0.01"
+        required
+        defaultValue={(bagShareCents / 100).toFixed(2)}
+        className={`${fieldClass} h-8 w-20`}
+        aria-label="Bag share dollars per bag"
+      />
+      <Button type="submit" size="sm" variant="outline" disabled={status === "loading"} className="border-gold/40 text-gold">
+        {status === "loading" ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+      </Button>
+    </form>
   );
 }
 
