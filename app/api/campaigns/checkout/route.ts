@@ -28,7 +28,11 @@ export async function POST(request: Request) {
   }
 
   const qty = Math.max(1, Math.min(20, Math.floor(quantity) || 1));
-  const origin = request.headers.get("origin") || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "nextpointcoffee.com"}`;
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  const proto = request.headers.get("x-forwarded-proto") ?? (host?.startsWith("localhost") || host?.startsWith("127.") ? "http" : "https");
+  const origin =
+    request.headers.get("origin") ||
+    (host ? `${proto}://${host}` : `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "nextpointcoffee.com"}`);
 
   if (simulate) {
     try {
