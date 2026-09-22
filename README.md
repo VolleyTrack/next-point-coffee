@@ -9,16 +9,54 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). No env vars are required for the campaigns prototype.
+Open [http://localhost:3000](http://localhost:3000). No env vars are required for the campaigns prototype in local dev if you set a preview key (see below).
+
+## Campaigns launch gate
+
+| Env | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_CAMPAIGNS_LIVE` | Public launch. Must be `true` for strangers to use campaigns. Unset/false = off (production default). |
+| `ADMIN_ACCESS_KEY` | Existing newsletter/orders key. Also unlocks campaigns **preview** while live is false. |
+| `CAMPAIGNS_PREVIEW_KEY` | Optional; if set, used instead of `ADMIN_ACCESS_KEY` for the campaigns unlock only. |
+
+Mirror of shop: `NEXT_PUBLIC_STORE_LIVE` gates checkout; `NEXT_PUBLIC_CAMPAIGNS_LIVE` gates the public campaigns portal.
+
+### Production (Vercel project `next-point-coffee`)
+
+Set both of these on **Production** (and Preview if you want the same behavior):
+
+```
+NEXT_PUBLIC_CAMPAIGNS_LIVE=false
+ADMIN_ACCESS_KEY=<same key Ryan already uses for /admin/newsletter>
+```
+
+Redeploy after changing `NEXT_PUBLIC_*` vars.
+
+When Ryan is ready to launch publicly:
+
+```
+NEXT_PUBLIC_CAMPAIGNS_LIVE=true
+```
+
+That removes the preview gate and restores nav/footer "Start a campaign" links.
+
+### Ryan-only preview (while live is false)
+
+1. Open [https://nextpointcoffee.com/campaigns](https://nextpointcoffee.com/campaigns) — public visitors see a coming-soon page (no role switcher, no portal).
+2. Click **Team preview access** at the bottom.
+3. Enter `ADMIN_ACCESS_KEY` (or `CAMPAIGNS_PREVIEW_KEY` if configured).
+4. An httpOnly cookie unlocks the full prototype in that browser for 14 days. Use **Lock preview** in the top banner to clear it.
+
+Nav and footer do **not** promote campaigns until `NEXT_PUBLIC_CAMPAIGNS_LIVE=true`. Fundraising CTAs point at the waitlist instead.
 
 ## Campaigns prototype
 
-Public routes live under `/campaigns`.
+Routes live under `/campaigns` (gated as above).
 
 | Route | Who | What |
 | --- | --- | --- |
-| `/campaigns` | Public | Request-to-start form (not an open campaign catalog) |
-| `/campaigns/[slug]` | Buyers | Published campaign page, purchase, share link + QR |
+| `/campaigns` | Public when live; coming soon + unlock when not | Request-to-start form (not an open campaign catalog) |
+| `/campaigns/[slug]` | Buyers (when live or preview unlocked) | Published campaign page, purchase, share link + QR |
 | `/campaigns/portal` | Demo | Role switcher (labeled prototype — not real auth) |
 | `/campaigns/admin` | Next Point Coffee Admin | One create flow, incoming requests, publish, ledger, payouts |
 | `/campaigns/club` | Club | All athlete campaigns for that org, owed / paid |
@@ -27,7 +65,7 @@ Public routes live under `/campaigns`.
 
 ### Demo users (role switcher)
 
-The existing site only has an `ADMIN_ACCESS_KEY` gate for orders/newsletter — no login system. Campaigns use a cookie-based **prototype role switcher**:
+The existing site only has an `ADMIN_ACCESS_KEY` gate for orders/newsletter — no login system. Campaigns use a cookie-based **prototype role switcher** (only after launch or preview unlock):
 
 - **Next Point Coffee Admin** — `admin@nextpointcoffee.com`
 - **Coach Rivera** — Riverside Volleyball Club

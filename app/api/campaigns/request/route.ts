@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { notifyCampaignRequest } from "@/lib/mailer";
 import { createCampaignRequest } from "@/lib/campaigns/store";
 import type { OrganizationType } from "@/lib/campaigns/types";
+import { canAccessCampaigns, campaignsUnavailableResponse } from "@/lib/campaigns/preview-access";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  if (!(await canAccessCampaigns())) {
+    return campaignsUnavailableResponse();
+  }
+
   const body = await request.json().catch(() => ({}));
   const organizationName = String(body.organizationName ?? "").trim();
   const organizationType: OrganizationType = body.organizationType === "nonprofit" ? "nonprofit" : "club";

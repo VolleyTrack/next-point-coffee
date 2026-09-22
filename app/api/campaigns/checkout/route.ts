@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { flatShippingCents, products, storeLive } from "@/lib/site";
 import { getStripe } from "@/lib/stripe";
 import { getCampaignBySlug, recordSale } from "@/lib/campaigns/store";
+import { canAccessCampaigns, campaignsUnavailableResponse } from "@/lib/campaigns/preview-access";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  if (!(await canAccessCampaigns())) {
+    return campaignsUnavailableResponse();
+  }
+
   const body = await request.json().catch(() => ({}));
   const slug = String(body.campaignSlug ?? "");
   const productSlug = String(body.productSlug ?? "");

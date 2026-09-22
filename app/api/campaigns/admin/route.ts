@@ -14,6 +14,7 @@ import {
   resetStore,
 } from "@/lib/campaigns/store";
 import type { OrganizationType } from "@/lib/campaigns/types";
+import { canAccessCampaigns, campaignsUnavailableResponse } from "@/lib/campaigns/preview-access";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,10 @@ async function requireAdmin() {
 }
 
 export async function POST(request: Request) {
+  if (!(await canAccessCampaigns())) {
+    return campaignsUnavailableResponse();
+  }
+
   if (!(await requireAdmin())) {
     return NextResponse.json({ error: "Next Point Coffee admin role required." }, { status: 401 });
   }

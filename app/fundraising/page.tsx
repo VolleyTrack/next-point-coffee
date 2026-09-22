@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { Button } from "@/components/ui/button";
-import { site, howItWorks, products } from "@/lib/site";
+import { campaignsLive, site, howItWorks, products } from "@/lib/site";
 import { DollarSign, Award, Users, Heart } from "lucide-react";
 
 const whyPoints = [
@@ -37,9 +37,15 @@ export default function FundraisingPage() {
             Bags expected to retail {site.bagPriceRange} at launch. No guaranteed total. A coffee purchase is not
             automatically a tax-deductible gift.
           </p>
-          <Button asChild className="mt-6 bg-gold text-np-black hover:bg-gold/90">
-            <Link href="/campaigns">Request to start a campaign</Link>
-          </Button>
+          {campaignsLive ? (
+            <Button asChild className="mt-6 bg-gold text-np-black hover:bg-gold/90">
+              <Link href="/campaigns">Request to start a campaign</Link>
+            </Button>
+          ) : (
+            <Button asChild className="mt-6 bg-gold text-np-black hover:bg-gold/90">
+              <Link href="#waitlist">Join the fundraising waitlist</Link>
+            </Button>
+          )}
         </div>
       </section>
 
@@ -86,7 +92,7 @@ export default function FundraisingPage() {
           ))}
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div id="waitlist" className="mt-12 grid scroll-mt-24 grid-cols-1 gap-6 md:grid-cols-2">
           <div className="rounded-lg border border-gold/30 bg-card p-8">
             <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Clubs & teams</p>
             <h2 className="mt-2 text-2xl font-black text-np-cream">Club fundraiser</h2>
