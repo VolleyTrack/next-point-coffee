@@ -9,6 +9,7 @@ import {
   createSetup,
   markCampaignRequestHandled,
   markPayoutPaid,
+  toPublicPortalUser,
   updateOrganization,
   publishCampaign,
   resetStore,
@@ -51,13 +52,13 @@ export async function POST(request: Request) {
         if (!Number.isFinite(bagShareCents) || bagShareCents < 0) {
           return NextResponse.json({ error: "Bag share ($ per bag) is required." }, { status: 400 });
         }
-        const organization = await createOrganization({
+        const { organization, credential } = await createOrganization({
           name,
           type: type as OrganizationType,
           contactEmail,
           bagShareCents,
         });
-        return NextResponse.json({ organization });
+        return NextResponse.json({ organization, credential });
       }
       case "updateOrganization": {
         const organizationId = String(body.organizationId ?? "");
@@ -78,8 +79,8 @@ export async function POST(request: Request) {
         if (!organizationId || !name || !email.includes("@")) {
           return NextResponse.json({ error: "Organization, name, and email are required." }, { status: 400 });
         }
-        const athlete = await createAthlete({ organizationId, name, email });
-        return NextResponse.json({ athlete });
+        const { athlete, credential } = await createAthlete({ organizationId, name, email });
+        return NextResponse.json({ athlete, credential });
       }
       case "createSetup": {
         const organizationName = String(body.organizationName ?? "").trim();
@@ -141,8 +142,14 @@ export async function POST(request: Request) {
         if (!organizationId || !athleteId || !name || !story) {
           return NextResponse.json({ error: "Organization, athlete, name, and story are required." }, { status: 400 });
         }
-        const campaign = await createCampaign({ organizationId, athleteId, name, story, goalBags });
-        return NextResponse.json({ campaign });
+        const { campaign, credentials } = await createCampaign({
+          organizationId,
+          athleteId,
+          name,
+          story,
+          goalBags,
+        });
+        return NextResponse.json({ campaign, credentials });
       }
       case "publishCampaign": {
         const campaignId = String(body.campaignId ?? "");
@@ -168,7 +175,13 @@ export async function POST(request: Request) {
       }
       case "resetDemo": {
         const store = await resetStore();
-        return NextResponse.json({ ok: true, store });
+        return NextResponse.json({
+          ok: true,
+          store: {
+            ...store,
+            users: store.users.map((user) => toPublicPortalUser(user)),
+          },
+        });
       }
       default:
         return NextResponse.json({ error: "Unknown action." }, { status: 400 });

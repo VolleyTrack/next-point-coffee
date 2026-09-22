@@ -57,22 +57,37 @@ Routes live under `/campaigns` (gated as above).
 | --- | --- | --- |
 | `/campaigns` | Public when live; coming soon + unlock when not | Request-to-start form (not an open campaign catalog) |
 | `/campaigns/[slug]` | Buyers (when live or preview unlocked) | Published campaign page, purchase, share link + QR |
-| `/campaigns/portal` | Demo | Role switcher (labeled prototype — not real auth) |
+| `/campaigns/login` | Partners | Email + password. Unauthenticated visits to portal, club, athlete, and admin redirect here. |
+| `/campaigns/portal` | Signed-in partner | Home for the account you signed in as |
 | `/campaigns/admin` | Next Point Coffee Admin | One create flow, incoming requests, publish, ledger, payouts |
 | `/campaigns/club` | Club | All athlete campaigns for that org, owed / paid |
 | `/campaigns/athlete` | Athlete | Only their campaign(s), progress + share/QR — no sales list |
 | `/api/books/export` | Books | Full sales + payout ledger JSON |
 
-### Demo users (role switcher)
+Buyer pages stay public once the launch gate (or preview unlock) lets the request through: `/campaigns`, `/campaigns/[slug]`, and `/campaigns/thanks`. They do not require a partner login.
 
-The existing site only has an `ADMIN_ACCESS_KEY` gate for orders/newsletter — no login system. Campaigns use a cookie-based **prototype role switcher** (only after launch or preview unlock):
+### Partner sign-in
 
-- **Next Point Coffee Admin** — `admin@nextpointcoffee.com`
-- **Coach Rivera** — Riverside Volleyball Club
-- **Alex Kim** — Athens Youth Foundation
-- **Maya Chen** / **Jordan Hale** / **Sam Ortiz** — athletes
+Passwords are stored as bcrypt hashes. Creating a campaign issues one club login and one athlete login and shows the temporary passwords **once** on the admin create screen (they are not emailed).
 
-Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaigns/sam-court-time`) and one draft (Jordan).
+The session cookie `npc_portal_session` is httpOnly and HMAC-SHA256 signed (same Web Crypto approach as the preview cookie). It is a **browser session cookie** (no `Max-Age`), so it is dropped when the browser process closes. The signed payload also expires after **12 hours**, and **Log out** clears it immediately. Signing secret: `PORTAL_SESSION_SECRET`, then `ADMIN_ACCESS_KEY`, then `CAMPAIGNS_PREVIEW_KEY`. Local dev with none of those set uses a built-in dev secret.
+
+`PORTAL_ADMIN_PASSWORD`, when set, replaces the Next Point Coffee admin password on process start. Set it before public launch. Committed demo passwords below stop working when `NEXT_PUBLIC_CAMPAIGNS_LIVE=true` unless `PORTAL_ALLOW_DEMO_PASSWORDS=true`.
+
+### Demo partner logins
+
+These work in local dev, and on a server while campaigns are not publicly live. They are not a role switcher — each email is a real password login.
+
+| Who | Email | Password |
+| --- | --- | --- |
+| Next Point Coffee Admin | `admin@nextpointcoffee.com` | `gold-serve-admin` |
+| Coach Rivera (Riverside, all club athletes) | `coach@riversidevc.example` | `riverside-club` |
+| Alex Kim (Athens Youth Foundation) | `hello@athensyouth.example` | `athens-club` |
+| Maya Chen | `maya@riversidevc.example` | `maya-season` |
+| Jordan Hale | `jordan@riversidevc.example` | `jordan-court` |
+| Sam Ortiz | `sam@athensyouth.example` | `sam-court` |
+
+Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaigns/sam-court-time`) and one draft (Jordan). Riverside's club login sees Maya and Jordan. Maya's login does not see Jordan.
 
 ### Happy path
 
@@ -85,7 +100,7 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 
 | Real | Stubbed |
 | --- | --- |
-| Campaign CRUD, publish, QR, public pages | End-user auth (demo role switcher) |
+| Campaign CRUD, publish, QR, public pages, partner email/password login | Email delivery of new partner passwords (shown once in admin) |
 | Durable sales ledger (local JSON, `data/campaigns-store.json`) | Stripe checkout unless `NEXT_PUBLIC_STORE_LIVE=true` and `STRIPE_SECRET_KEY` are set |
 | Per-org bag share (set on create) | Books UI — events export + optional webhook only |
 | Biweekly payout compute / mark paid | Remote Supabase tables (SQL is in `supabase/campaigns.sql`) |

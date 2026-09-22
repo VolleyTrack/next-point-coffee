@@ -1,24 +1,31 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isPartnerPortalPath } from "@/lib/campaigns/portal-paths";
 import {
   CAMPAIGNS_PREVIEW_COOKIE,
   isValidCampaignsPreviewCookieAsync,
   previewSecretFromEnv,
 } from "@/lib/campaigns/preview-token";
+import {
+  PORTAL_SESSION_COOKIE,
+  portalSessionSecret,
+  readPortalSessionUserId,
+} from "@/lib/campaigns/session-token";
+
+function previewGateOpen(): boolean {
+  if (process.env.NEXT_PUBLIC_CAMPAIGNS_LIVE === "true") return true;
+  if (process.env.NODE_ENV === "development" && !previewSecretFromEnv()) return true;
+  return false;
+}
 
 /**
- * When NEXT_PUBLIC_CAMPAIGNS_LIVE is not true, keep strangers off the campaigns
- * portal by rewriting page requests to a standalone coming-soon route (so
- * /campaigns/* pages and their data loaders never run). Ryan unlocks via
- * ADMIN_ACCESS_KEY / CAMPAIGNS_PREVIEW_KEY → httpOnly cookie.
+ * Public launch stays behind NEXT_PUBLIC_CAMPAIGNS_LIVE, with Ryan's preview
+ * cookie as the exception. Partner pages (portal, club, athlete, admin) also
+ * require a signed email/password session. Buyer pages — /campaigns, a live
+ * /campaigns/[slug] link, and /campaigns/thanks — do not.
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (process.env.NEXT_PUBLIC_CAMPAIGNS_LIVE === "true") {
-    return NextResponse.next();
-  }
-
-  // Unlock + lock endpoints must stay reachable while gated.
   if (pathname === "/api/campaigns/preview-unlock") {
     return NextResponse.next();
   }
@@ -30,28 +37,37 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const secret = previewSecretFromEnv();
-  // Local npm run dev with no key configured: leave the prototype open.
-  if (process.env.NODE_ENV === "development" && !secret) {
-    return NextResponse.next();
+  if (!previewGateOpen()) {
+    const secret = previewSecretFromEnv();
+    const cookie = request.cookies.get(CAMPAIGNS_PREVIEW_COOKIE)?.value;
+    if (!(await isValidCampaignsPreviewCookieAsync(cookie, secret))) {
+      if (isCampaignsApi) {
+        return NextResponse.json(
+          { error: "Campaigns are not live yet. Join the fundraising waitlist or unlock with the preview key." },
+          { status: 403 }
+        );
+      }
+      const url = request.nextUrl.clone();
+      url.pathname = "/campaigns-coming-soon";
+      return NextResponse.rewrite(url);
+    }
   }
 
-  const cookie = request.cookies.get(CAMPAIGNS_PREVIEW_COOKIE)?.value;
-  if (await isValidCampaignsPreviewCookieAsync(cookie, secret)) {
-    return NextResponse.next();
-  }
-
-  if (isCampaignsApi) {
-    return NextResponse.json(
-      { error: "Campaigns are not live yet. Join the fundraising waitlist or unlock with the preview key." },
-      { status: 403 }
+  if (isPartnerPortalPath(pathname)) {
+    const userId = await readPortalSessionUserId(
+      request.cookies.get(PORTAL_SESSION_COOKIE)?.value,
+      portalSessionSecret()
     );
+    if (!userId) {
+      const login = request.nextUrl.clone();
+      login.pathname = "/campaigns/login";
+      login.search = "";
+      login.searchParams.set("next", pathname);
+      return NextResponse.redirect(login);
+    }
   }
 
-  // Browser URL stays /campaigns…; coming-soon page has no portal layout/data.
-  const url = request.nextUrl.clone();
-  url.pathname = "/campaigns-coming-soon";
-  return NextResponse.rewrite(url);
+  return NextResponse.next();
 }
 
 export const config = {

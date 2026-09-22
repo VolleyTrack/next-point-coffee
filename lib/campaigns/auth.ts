@@ -1,25 +1,23 @@
 import { cookies } from "next/headers";
-import { getUserById, listUsers } from "./store";
-import type { PortalRole, PortalUser } from "./types";
+import { redirect } from "next/navigation";
+import { portalHome } from "./portal-paths";
+import { PORTAL_SESSION_COOKIE, portalSessionSecret, readPortalSessionUserId } from "./session-token";
+import { getUserById } from "./store";
+import type { PortalRole, PublicPortalUser } from "./types";
 
-export const PORTAL_COOKIE = "npc_portal_user";
-
-export async function getPortalUser(): Promise<PortalUser | null> {
+export async function getPortalUser(): Promise<PublicPortalUser | null> {
   const jar = await cookies();
-  const id = jar.get(PORTAL_COOKIE)?.value;
-  if (!id) return null;
-  return getUserById(id);
+  const userId = await readPortalSessionUserId(
+    jar.get(PORTAL_SESSION_COOKIE)?.value,
+    portalSessionSecret()
+  );
+  if (!userId) return null;
+  return getUserById(userId);
 }
 
-export async function requirePortalRole(roles: PortalRole[]): Promise<PortalUser> {
+export async function requirePortalPage(roles: PortalRole[]): Promise<PublicPortalUser> {
   const user = await getPortalUser();
-  if (!user || !roles.includes(user.role)) {
-    throw new Error("Unauthorized");
-  }
+  if (!user) redirect("/campaigns/login");
+  if (!roles.includes(user.role)) redirect(portalHome(user.role));
   return user;
-}
-
-export async function portalUsersForSwitcher() {
-  const users = await listUsers();
-  return users.sort((a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name));
 }

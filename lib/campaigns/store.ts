@@ -3,6 +3,7 @@ import path from "path";
 import { products } from "@/lib/site";
 import { SEED_STATE } from "./seed";
 import { earningsPerBagCents, slugify } from "./money";
+import { DUMMY_PASSWORD_HASH, generateTemporaryPassword, hashPassword, verifyPassword } from "./passwords";
 import { biweeklyWindow } from "./payouts";
 import { buildPayoutBooksEvent, buildSaleBooksEvent, pushBooksEvent, syncBooksEvents } from "./books";
 import type {
@@ -11,12 +12,15 @@ import type {
   Campaign,
   CampaignStoreState,
   CampaignWithRelations,
+  IssuedPortalCredential,
   Organization,
   CampaignRequest,
   OrganizationType,
   OrgSummary,
   PayoutPeriod,
+  PortalRole,
   PortalUser,
+  PublicPortalUser,
   Sale,
   SaleSource,
 } from "./types";
@@ -36,6 +40,13 @@ function cloneState(state: CampaignStoreState): CampaignStoreState {
   return structuredClone(state);
 }
 
+/** True while the public launch flag is off, unless explicitly disabled. */
+export function committedDemoPasswordsActive(): boolean {
+  if (process.env.PORTAL_ALLOW_DEMO_PASSWORDS === "true") return true;
+  if (process.env.PORTAL_ALLOW_DEMO_PASSWORDS === "false") return false;
+  return process.env.NEXT_PUBLIC_CAMPAIGNS_LIVE !== "true";
+}
+
 function migrateUserFacingCopy(state: CampaignStoreState): void {
   for (const user of state.users) {
     if (user.name === "NPC Admin" || user.id === "user-admin") {
@@ -53,6 +64,42 @@ function migrateUserFacingCopy(state: CampaignStoreState): void {
   for (const request of state.campaignRequests ?? []) {
     request.notes = rewrite(request.notes);
   }
+}
+
+function migratePasswordHashes(state: CampaignStoreState): void {
+  const seedById = new Map(SEED_STATE.users.map((user) => [user.id, user.passwordHash]));
+  for (const user of state.users) {
+    if (!user.passwordHash) {
+      const seeded = seedById.get(user.id);
+      if (seeded) user.passwordHash = seeded;
+    }
+  }
+}
+
+/**
+ * While campaigns are public, drop password hashes that still match the
+ * committed seed so README demo passwords cannot sign in. Accounts created
+ * later, and an admin hash set from PORTAL_ADMIN_PASSWORD, are left alone.
+ */
+function lockCommittedDemoPasswords(state: CampaignStoreState): void {
+  if (committedDemoPasswordsActive()) return;
+  const seedHashById = new Map(SEED_STATE.users.map((user) => [user.id, user.passwordHash]));
+  for (const user of state.users) {
+    const seedHash = seedHashById.get(user.id);
+    if (seedHash && user.passwordHash === seedHash) {
+      user.passwordHash = undefined;
+    }
+  }
+}
+
+async function applyEnvAdminPassword(state: CampaignStoreState): Promise<boolean> {
+  const password = process.env.PORTAL_ADMIN_PASSWORD?.trim();
+  if (!password) return false;
+  const admin = state.users.find((user) => user.role === "admin");
+  if (!admin) return false;
+  if (admin.passwordHash && (await verifyPassword(password, admin.passwordHash))) return false;
+  admin.passwordHash = await hashPassword(password);
+  return true;
 }
 
 async function readFileState(): Promise<CampaignStoreState | null> {
@@ -90,14 +137,20 @@ async function writeFileState(state: CampaignStoreState): Promise<void> {
 
 async function loadState(): Promise<CampaignStoreState> {
   if (globalForStore.__npcCampaignStore) {
-    migrateUserFacingCopy(globalForStore.__npcCampaignStore);
-    return globalForStore.__npcCampaignStore;
+    const state = globalForStore.__npcCampaignStore;
+    migrateUserFacingCopy(state);
+    migratePasswordHashes(state);
+    lockCommittedDemoPasswords(state);
+    return state;
   }
   const fromDisk = await readFileState();
   const state = cloneState(fromDisk ?? SEED_STATE);
   migrateUserFacingCopy(state);
+  migratePasswordHashes(state);
+  const adminChanged = await applyEnvAdminPassword(state);
+  lockCommittedDemoPasswords(state);
   globalForStore.__npcCampaignStore = state;
-  if (!fromDisk) await writeFileState(state);
+  if (!fromDisk || adminChanged) await writeFileState(state);
   return state;
 }
 
@@ -201,14 +254,73 @@ export async function listCampaignsForAthlete(athleteId: string): Promise<Campai
   return (await listAllCampaigns()).filter((c) => c.athleteId === athleteId);
 }
 
-export async function listUsers(): Promise<PortalUser[]> {
-  const state = await loadState();
-  return state.users.map((u) => ({ ...u }));
+export function toPublicPortalUser(user: PortalUser): PublicPortalUser {
+  const { passwordHash: _passwordHash, ...publicUser } = user;
+  return publicUser;
 }
 
-export async function getUserById(id: string): Promise<PortalUser | null> {
+export async function listUsers(): Promise<PublicPortalUser[]> {
   const state = await loadState();
-  return state.users.find((u) => u.id === id) ?? null;
+  return state.users.map((user) => toPublicPortalUser(user));
+}
+
+export async function getUserById(id: string): Promise<PublicPortalUser | null> {
+  const state = await loadState();
+  const user = state.users.find((u) => u.id === id);
+  return user ? toPublicPortalUser(user) : null;
+}
+
+export async function verifyPortalCredentials(
+  email: string,
+  password: string
+): Promise<PublicPortalUser | null> {
+  const normalized = email.trim().toLowerCase();
+  const state = await loadState();
+  const user = state.users.find((row) => row.email === normalized);
+  const ok = await verifyPassword(password, user?.passwordHash || DUMMY_PASSWORD_HASH);
+  if (!user?.passwordHash || !ok) return null;
+  return toPublicPortalUser(user);
+}
+
+async function preparePortalUser(
+  state: CampaignStoreState,
+  input: {
+    role: PortalRole;
+    name: string;
+    email: string;
+    organizationId?: string;
+    athleteId?: string;
+  },
+  reservedEmails: string[] = []
+): Promise<{ user: PortalUser; credential: IssuedPortalCredential }> {
+  const email = input.email.trim().toLowerCase();
+  const name = input.name.trim();
+  if (
+    state.users.some((user) => user.email === email) ||
+    reservedEmails.some((reserved) => reserved === email)
+  ) {
+    throw new Error("That email already has a partner login.");
+  }
+  const temporaryPassword = generateTemporaryPassword();
+  const passwordHash = await hashPassword(temporaryPassword);
+  const user: PortalUser = {
+    id: crypto.randomUUID(),
+    role: input.role,
+    name,
+    email,
+    organizationId: input.organizationId,
+    athleteId: input.athleteId,
+    passwordHash,
+  };
+  return {
+    user,
+    credential: {
+      role: input.role,
+      name,
+      email,
+      temporaryPassword,
+    },
+  };
 }
 
 export async function listOrganizations(): Promise<Organization[]> {
@@ -341,8 +453,9 @@ export async function createOrganization(input: {
   type: OrganizationType;
   contactEmail: string;
   bagShareCents: number;
-}): Promise<Organization> {
-  return mutate((state) => {
+}): Promise<{ organization: Organization; credential: IssuedPortalCredential }> {
+  return mutate(async (state) => {
+    const contactEmail = input.contactEmail.trim().toLowerCase();
     const org: Organization = {
       id: crypto.randomUUID(),
       name: input.name.trim(),
@@ -351,19 +464,19 @@ export async function createOrganization(input: {
         state.organizations.map((o) => o.slug),
         input.name
       ),
-      contactEmail: input.contactEmail.trim().toLowerCase(),
+      contactEmail,
       bagShareCents: Math.max(0, Math.round(input.bagShareCents)),
       createdAt: new Date().toISOString(),
     };
-    state.organizations.push(org);
-    state.users.push({
-      id: crypto.randomUUID(),
+    const prepared = await preparePortalUser(state, {
       role: "club",
       name: `${org.name} Manager`,
-      email: org.contactEmail,
+      email: contactEmail,
       organizationId: org.id,
     });
-    return { ...org };
+    state.users.push(prepared.user);
+    state.organizations.push(org);
+    return { organization: { ...org }, credential: prepared.credential };
   });
 }
 
@@ -383,8 +496,8 @@ export async function createAthlete(input: {
   organizationId: string;
   name: string;
   email: string;
-}): Promise<Athlete> {
-  return mutate((state) => {
+}): Promise<{ athlete: Athlete; credential: IssuedPortalCredential }> {
+  return mutate(async (state) => {
     const org = state.organizations.find((o) => o.id === input.organizationId);
     if (!org) throw new Error("Organization not found.");
     const athlete: Athlete = {
@@ -394,16 +507,16 @@ export async function createAthlete(input: {
       email: input.email.trim().toLowerCase(),
       createdAt: new Date().toISOString(),
     };
-    state.athletes.push(athlete);
-    state.users.push({
-      id: crypto.randomUUID(),
+    const prepared = await preparePortalUser(state, {
       role: "athlete",
       name: athlete.name,
       email: athlete.email,
       organizationId: org.id,
       athleteId: athlete.id,
     });
-    return { ...athlete };
+    state.users.push(prepared.user);
+    state.athletes.push(athlete);
+    return { athlete: { ...athlete }, credential: prepared.credential };
   });
 }
 
@@ -469,9 +582,19 @@ export async function createSetup(input: {
   story: string;
   goalBags: number;
   publish?: boolean;
-}): Promise<{ organization: Organization; athlete: Athlete; campaign: Campaign }> {
-  return mutate((state) => {
+}): Promise<{
+  organization: Organization;
+  athlete: Athlete;
+  campaign: Campaign;
+  credentials: IssuedPortalCredential[];
+}> {
+  return mutate(async (state) => {
     const now = new Date().toISOString();
+    const contactEmail = input.contactEmail.trim().toLowerCase();
+    const athleteEmail = input.athleteEmail.trim().toLowerCase();
+    if (contactEmail === athleteEmail) {
+      throw new Error("Club and athlete logins need different email addresses.");
+    }
     const organization: Organization = {
       id: crypto.randomUUID(),
       name: input.organizationName.trim(),
@@ -480,7 +603,7 @@ export async function createSetup(input: {
         state.organizations.map((o) => o.slug),
         input.organizationName
       ),
-      contactEmail: input.contactEmail.trim().toLowerCase(),
+      contactEmail,
       bagShareCents: Math.max(0, Math.round(input.bagShareCents)),
       createdAt: now,
     };
@@ -488,7 +611,7 @@ export async function createSetup(input: {
       id: crypto.randomUUID(),
       organizationId: organization.id,
       name: input.athleteName.trim(),
-      email: input.athleteEmail.trim().toLowerCase(),
+      email: athleteEmail,
       createdAt: now,
     };
     const campaign: Campaign = {
@@ -506,30 +629,33 @@ export async function createSetup(input: {
       createdAt: now,
       publishedAt: input.publish ? now : null,
     };
+    const clubLogin = await preparePortalUser(state, {
+      role: "club",
+      name: `${organization.name} Manager`,
+      email: contactEmail,
+      organizationId: organization.id,
+    });
+    const athleteLogin = await preparePortalUser(
+      state,
+      {
+        role: "athlete",
+        name: athlete.name,
+        email: athleteEmail,
+        organizationId: organization.id,
+        athleteId: athlete.id,
+      },
+      [clubLogin.user.email]
+    );
+    const credentials = [clubLogin.credential, athleteLogin.credential];
+    state.users.push(clubLogin.user, athleteLogin.user);
     state.organizations.push(organization);
     state.athletes.push(athlete);
     state.campaigns.push(campaign);
-    state.users.push(
-      {
-        id: crypto.randomUUID(),
-        role: "club",
-        name: `${organization.name} Manager`,
-        email: organization.contactEmail,
-        organizationId: organization.id,
-      },
-      {
-        id: crypto.randomUUID(),
-        role: "athlete",
-        name: athlete.name,
-        email: athlete.email,
-        organizationId: organization.id,
-        athleteId: athlete.id,
-      }
-    );
     return {
       organization: { ...organization },
       athlete: { ...athlete },
       campaign: { ...campaign },
+      credentials,
     };
   });
 }
@@ -540,14 +666,48 @@ export async function createCampaign(input: {
   name: string;
   story: string;
   goalBags: number;
-}): Promise<Campaign> {
-  return mutate((state) => {
+}): Promise<{ campaign: Campaign; credentials: IssuedPortalCredential[] }> {
+  return mutate(async (state) => {
     const org = state.organizations.find((o) => o.id === input.organizationId);
     const athlete = state.athletes.find((a) => a.id === input.athleteId);
     if (!org) throw new Error("Organization not found.");
     if (!athlete || athlete.organizationId !== org.id) {
       throw new Error("Athlete does not belong to that organization.");
     }
+    const prepared: { user: PortalUser; credential: IssuedPortalCredential }[] = [];
+    const reserved: string[] = [];
+    const clubUser = state.users.find((user) => user.role === "club" && user.organizationId === org.id);
+    if (!clubUser) {
+      const clubLogin = await preparePortalUser(
+        state,
+        {
+          role: "club",
+          name: `${org.name} Manager`,
+          email: org.contactEmail,
+          organizationId: org.id,
+        },
+        reserved
+      );
+      prepared.push(clubLogin);
+      reserved.push(clubLogin.user.email);
+    }
+    const athleteUser = state.users.find((user) => user.role === "athlete" && user.athleteId === athlete.id);
+    if (!athleteUser) {
+      const athleteLogin = await preparePortalUser(
+        state,
+        {
+          role: "athlete",
+          name: athlete.name,
+          email: athlete.email,
+          organizationId: org.id,
+          athleteId: athlete.id,
+        },
+        reserved
+      );
+      prepared.push(athleteLogin);
+    }
+    if (prepared.length > 0) state.users.push(...prepared.map((row) => row.user));
+    const credentials = prepared.map((row) => row.credential);
     const campaign: Campaign = {
       id: crypto.randomUUID(),
       organizationId: org.id,
@@ -564,7 +724,7 @@ export async function createCampaign(input: {
       publishedAt: null,
     };
     state.campaigns.push(campaign);
-    return { ...campaign };
+    return { campaign: { ...campaign }, credentials };
   });
 }
 
