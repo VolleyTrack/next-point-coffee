@@ -53,7 +53,8 @@ export function CreateSetupForm({ initialRequest }: { initialRequest?: CampaignR
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     const organizationName = String(fd.get("organizationName") ?? "").trim();
     const type = fd.get("type") === "nonprofit" ? "nonprofit" : "club";
     const contactEmail = String(fd.get("contactEmail") ?? "").trim();
@@ -90,7 +91,7 @@ export function CreateSetupForm({ initialRequest }: { initialRequest?: CampaignR
           ? `Live. Share /campaigns/${slug} — that link and QR stay public for buyers.`
           : "Draft saved. Publish it below when you are ready to share the link."
       );
-      e.currentTarget.reset();
+      form.reset();
       setPublish(false);
       router.refresh();
     } catch (err) {
