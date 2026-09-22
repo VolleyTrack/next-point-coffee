@@ -1,18 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /** Shown only when campaigns are not live but Ryan has unlocked preview. */
 export function CampaignsPreviewBanner() {
-  const router = useRouter();
   const [locking, setLocking] = useState(false);
 
   async function lockPreview() {
     setLocking(true);
     try {
       await fetch("/api/campaigns/preview-unlock", { method: "DELETE" });
-      router.refresh();
+      window.location.assign("/campaigns");
     } finally {
       setLocking(false);
     }

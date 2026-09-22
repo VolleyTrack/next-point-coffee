@@ -1,58 +1,39 @@
-import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { campaignsLive } from "@/lib/site";
+import {
+  CAMPAIGNS_PREVIEW_COOKIE,
+  PREVIEW_COOKIE_MAX_AGE,
+  campaignsPreviewTokenAsync,
+  isValidCampaignsPreviewCookieAsync,
+  isValidCampaignsPreviewKey,
+  previewSecretFromEnv,
+} from "@/lib/campaigns/preview-token";
 
-/** HttpOnly cookie set after Ryan unlocks campaigns preview with the access key. */
-export const CAMPAIGNS_PREVIEW_COOKIE = "npc_campaigns_preview";
-
-const PREVIEW_COOKIE_MAX_AGE = 60 * 60 * 24 * 14; // 14 days
-
-function previewSecret(): string | null {
-  const key = process.env.CAMPAIGNS_PREVIEW_KEY || process.env.ADMIN_ACCESS_KEY;
-  return key && key.length > 0 ? key : null;
-}
+export {
+  CAMPAIGNS_PREVIEW_COOKIE,
+  isValidCampaignsPreviewKey,
+  previewSecretFromEnv as previewSecret,
+} from "@/lib/campaigns/preview-token";
 
 /** Signed token derived from the preview/admin key — not the raw secret. */
-export function campaignsPreviewToken(): string | null {
-  const secret = previewSecret();
+export async function campaignsPreviewToken(): Promise<string | null> {
+  const secret = previewSecretFromEnv();
   if (!secret) return null;
-  return createHmac("sha256", secret).update("next-point-coffee-campaigns-preview-v1").digest("hex");
+  return campaignsPreviewTokenAsync(secret);
 }
 
-export function isValidCampaignsPreviewKey(provided: string): boolean {
-  const expected = previewSecret();
-  if (!expected || !provided) return false;
-  try {
-    const a = Buffer.from(provided);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
-}
-
-export function isValidCampaignsPreviewCookie(value: string | undefined): boolean {
-  const expected = campaignsPreviewToken();
-  if (!expected || !value) return false;
-  try {
-    const a = Buffer.from(value);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
+export async function isValidCampaignsPreviewCookie(value: string | undefined): Promise<boolean> {
+  return isValidCampaignsPreviewCookieAsync(value);
 }
 
 /** True when the public launch flag is on, or Ryan has unlocked preview for this browser. */
 export async function canAccessCampaigns(): Promise<boolean> {
   if (campaignsLive) return true;
   // Local npm run dev: keep the prototype open when no access key is configured yet.
-  if (process.env.NODE_ENV === "development" && !previewSecret()) return true;
+  if (process.env.NODE_ENV === "development" && !previewSecretFromEnv()) return true;
   const jar = await cookies();
-  return isValidCampaignsPreviewCookie(jar.get(CAMPAIGNS_PREVIEW_COOKIE)?.value);
+  return isValidCampaignsPreviewCookieAsync(jar.get(CAMPAIGNS_PREVIEW_COOKIE)?.value);
 }
 
 export function previewCookieOptions() {

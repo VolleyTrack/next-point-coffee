@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import { site } from "@/lib/site";
  * Strangers see waitlist/contact CTAs. Ryan unlocks preview with the access key.
  */
 export function CampaignsComingSoon() {
-  const router = useRouter();
   const [key, setKey] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
@@ -39,7 +37,7 @@ export function CampaignsComingSoon() {
         setStatus("idle");
         return;
       }
-      router.refresh();
+      window.location.assign("/campaigns");
     } catch {
       setError("Something went wrong. Try again.");
       setStatus("idle");

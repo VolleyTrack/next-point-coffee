@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Incorrect access key." }, { status: 401 });
   }
 
-  const token = campaignsPreviewToken();
+  const token = await campaignsPreviewToken();
   if (!token) {
     return NextResponse.json(
       { error: "Preview unlock is not configured. Set ADMIN_ACCESS_KEY (or CAMPAIGNS_PREVIEW_KEY) in Vercel." },
