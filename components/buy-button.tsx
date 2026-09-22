@@ -93,9 +93,7 @@ export function BuyButton({ slug, priceCents }: BuyButtonProps) {
         </div>
       </div>
       <p className="text-sm text-muted-foreground">
-        <span className="font-black text-np-cream">{formatUsd(lineTotal)}</span>
-        {" · "}
-        {formatUsd(priceCents)} per bag, shipping included
+        <span className="font-black text-np-cream">{formatUsd(priceCents)}</span> per bag, shipping included
       </p>
       <Button
         type="button"
