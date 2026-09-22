@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPortalUser } from "@/lib/campaigns/auth";
-import { portalHome, sanitizePortalNext } from "@/lib/campaigns/portal-paths";
+import { loginDestination } from "@/lib/campaigns/portal-paths";
 import { canAccessCampaigns, campaignsUnavailableResponse } from "@/lib/campaigns/preview-access";
 import {
   LEGACY_PORTAL_COOKIE,
@@ -57,8 +57,7 @@ export async function POST(request: Request) {
   }
 
   const token = await createPortalSessionToken(user.id, secret);
-  const redirectTo =
-    sanitizePortalNext(typeof body.next === "string" ? body.next : null, user.role) ?? portalHome(user.role);
+  const redirectTo = loginDestination(typeof body.next === "string" ? body.next : null, user.role);
 
   const response = NextResponse.json({ user, redirectTo });
   response.cookies.set(PORTAL_SESSION_COOKIE, token, portalSessionCookieOptions());

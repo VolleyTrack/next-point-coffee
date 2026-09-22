@@ -34,3 +34,10 @@ export function sanitizePortalNext(value: string | undefined | null, role?: Port
   if (path === "/campaigns/portal" || path === home || path.startsWith(`${home}/`)) return path;
   return null;
 }
+
+/** After a successful sign-in, open that role's dashboard. A generic portal redirect does too. */
+export function loginDestination(next: string | undefined | null, role: PortalRole): string {
+  const safe = sanitizePortalNext(next, role);
+  if (!safe || safe === "/campaigns/portal") return portalHome(role);
+  return safe;
+}

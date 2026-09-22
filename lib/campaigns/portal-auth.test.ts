@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { verifyPassword, hashPassword, generateTemporaryPassword } from "./passwords.ts";
-import { isPartnerPortalPath, sanitizePortalNext } from "./portal-paths.ts";
+import { isPartnerPortalPath, loginDestination, sanitizePortalNext } from "./portal-paths.ts";
 import {
   PORTAL_SESSION_TTL_SECONDS,
   createPortalSessionToken,
@@ -34,6 +34,11 @@ test("partner routes are gated and buyer links are not", () => {
   assert.equal(sanitizePortalNext("/campaigns/admin", "athlete"), null);
   assert.equal(sanitizePortalNext("/campaigns/club", "club"), "/campaigns/club");
   assert.equal(sanitizePortalNext("/campaigns/portal", "athlete"), "/campaigns/portal");
+  assert.equal(loginDestination("/campaigns/portal", "club"), "/campaigns/club");
+  assert.equal(loginDestination("/campaigns/portal", "athlete"), "/campaigns/athlete");
+  assert.equal(loginDestination("/campaigns/portal", "admin"), "/campaigns/admin");
+  assert.equal(loginDestination("/campaigns/admin", "admin"), "/campaigns/admin");
+  assert.equal(loginDestination("/campaigns/admin", "athlete"), "/campaigns/athlete");
 });
 
 test("session token is signed, expires, and rejects tampering", async () => {
