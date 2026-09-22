@@ -9,6 +9,7 @@ import {
   portalSessionCookieOptions,
   portalSessionSecret,
 } from "@/lib/campaigns/session-token";
+import { clearPortalSessionCookies } from "@/lib/campaigns/logout";
 import { verifyPortalCredentials } from "@/lib/campaigns/store";
 
 export const dynamic = "force-dynamic";
@@ -69,8 +70,5 @@ export async function DELETE() {
   if (!(await canAccessCampaigns())) {
     return campaignsUnavailableResponse();
   }
-  const response = NextResponse.json({ user: null });
-  clearCookie(response, PORTAL_SESSION_COOKIE);
-  clearCookie(response, LEGACY_PORTAL_COOKIE);
-  return response;
+  return clearPortalSessionCookies(NextResponse.json({ user: null }));
 }

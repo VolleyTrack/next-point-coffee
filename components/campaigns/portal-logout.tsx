@@ -1,31 +1,16 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
+/**
+ * Native form POST, not a client router transition. The logout route
+ * clears npc_portal_session and answers 303 to /campaigns/login.
+ */
 export function PortalLogoutButton() {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-
-  async function logout() {
-    setBusy(true);
-    try {
-      await fetch("/api/campaigns/session", { method: "DELETE" });
-      router.push("/campaigns/login");
-      router.refresh();
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
-    <button
-      type="button"
-      onClick={logout}
-      disabled={busy}
-      className="text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:text-gold disabled:opacity-50"
-    >
-      Log out
-    </button>
+    <form action="/api/campaigns/logout" method="POST" className="inline-flex">
+      <button
+        type="submit"
+        className="text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:text-gold"
+      >
+        Log out
+      </button>
+    </form>
   );
 }
