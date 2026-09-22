@@ -18,8 +18,12 @@ export const site = {
 // Flip to true (env var NEXT_PUBLIC_STORE_LIVE=true in Vercel) to accept real orders.
 export const storeLive = process.env.NEXT_PUBLIC_STORE_LIVE === "true";
 
-// Flat shipping fee in cents, charged as a separate Stripe line item.
-export const flatShippingCents = 650; // $6.50 placeholder - update once you have a real carrier quote
+// Retail shop prices include shipping. Do not charge this on /api/checkout.
+// Fundraiser campaign checkout still adds it as its own Stripe shipping option.
+export const flatShippingCents = 650;
+
+/** Max bags on one retail checkout line. /api/checkout clamps to this range. */
+export const retailMaxQuantity = 20;
 
 export interface Product {
   slug: string;
@@ -32,7 +36,7 @@ export interface Product {
   available: boolean;
   purchasable: boolean;
   netWeight: string;
-  priceCents: number; // $20.00 = 2000
+  priceCents: number; // All-in retail price in cents. Shipping is included in the bag price. $20.00 = 2000
 }
 
 export const products: Product[] = [

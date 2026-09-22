@@ -40,7 +40,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         <div className="pt-2">
           {product.purchasable && storeLive ? (
-            <BuyButton slug={product.slug} label={`Buy Now — $${(product.priceCents / 100).toFixed(2)}`} />
+            <BuyButton slug={product.slug} priceCents={product.priceCents} />
           ) : (
             <WaitlistForm
               ctaLabel="Notify Me at Launch"
