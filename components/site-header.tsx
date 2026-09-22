@@ -5,13 +5,14 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { campaignsLive } from "@/lib/site";
 
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/shop", label: "Shop" },
   { href: "/about", label: "Our Story" },
   { href: "/fundraising", label: "Fundraising" },
-  { href: "/campaigns", label: "Start a campaign" },
+  ...(campaignsLive ? [{ href: "/campaigns", label: "Start a campaign" }] : []),
   { href: "/contact", label: "Contact" },
 ];
 

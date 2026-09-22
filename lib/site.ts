@@ -18,6 +18,11 @@ export const site = {
 // Flip to true (env var NEXT_PUBLIC_STORE_LIVE=true in Vercel) to accept real orders.
 export const storeLive = process.env.NEXT_PUBLIC_STORE_LIVE === "true";
 
+// Public campaigns launch. Keep false until Ryan flips it in Vercel.
+// When false, /campaigns is not a public portal — preview unlock uses ADMIN_ACCESS_KEY
+// (or CAMPAIGNS_PREVIEW_KEY). When true, the Ryan-only gate is removed.
+export const campaignsLive = process.env.NEXT_PUBLIC_CAMPAIGNS_LIVE === "true";
+
 // Retail shop prices include shipping. Do not charge this on /api/checkout.
 // Fundraiser campaign checkout still adds it as its own Stripe shipping option.
 export const flatShippingCents = 650;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { site } from "@/lib/site";
+import { campaignsLive, site } from "@/lib/site";
 
 export function SiteFooter() {
   return (
@@ -21,8 +21,12 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li><Link href="/shop" className="hover:text-gold">Shop Coffee</Link></li>
               <li><Link href="/fundraising" className="hover:text-gold">Team Fundraising</Link></li>
-              <li><Link href="/campaigns" className="hover:text-gold">Start a campaign</Link></li>
-              <li><Link href="/campaigns/portal" className="hover:text-gold">Partner Portal</Link></li>
+              {campaignsLive && (
+                <>
+                  <li><Link href="/campaigns" className="hover:text-gold">Start a campaign</Link></li>
+                  <li><Link href="/campaigns/portal" className="hover:text-gold">Partner Portal</Link></li>
+                </>
+              )}
               <li><Link href="/about" className="hover:text-gold">Our Story</Link></li>
               <li><Link href="/contact" className="hover:text-gold">Contact</Link></li>
             </ul>

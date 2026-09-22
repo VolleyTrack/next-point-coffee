@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { PORTAL_COOKIE } from "@/lib/campaigns/auth";
 import { getUserById, listUsers } from "@/lib/campaigns/store";
+import { canAccessCampaigns, campaignsUnavailableResponse } from "@/lib/campaigns/preview-access";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  if (!(await canAccessCampaigns())) {
+    return campaignsUnavailableResponse();
+  }
+
   const jar = await cookies();
   const id = jar.get(PORTAL_COOKIE)?.value;
   const user = id ? await getUserById(id) : null;
@@ -13,6 +18,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!(await canAccessCampaigns())) {
+    return campaignsUnavailableResponse();
+  }
+
   const body = await request.json().catch(() => ({}));
   const userId = typeof body.userId === "string" ? body.userId : "";
   const jar = await cookies();
