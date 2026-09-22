@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { signupListAttachment } from "@/lib/signups-csv";
 
 type Transporter = ReturnType<typeof nodemailer.createTransport>;
 
@@ -28,11 +29,19 @@ function notifyAddress(): string | undefined {
 export async function notifyNewSignup(
   email: string,
   context: string,
-  alreadySubscribed = false
+  alreadySubscribed = false,
+  signupCsv?: string
 ): Promise<void> {
   const t = getTransporter();
   const to = notifyAddress();
   if (!t || !to) return;
+
+  // Only the configured owner address receives this message. The CSV is an
+  // attachment on that one message — never a public download.
+  const attachment = signupListAttachment(alreadySubscribed, signupCsv);
+  const listNote = attachment
+    ? `\n\nThe current master signup list is attached as ${attachment.filename} (newest first).`
+    : "";
 
   try {
     await t.sendMail({
@@ -41,7 +50,7 @@ export async function notifyNewSignup(
       subject: alreadySubscribed
         ? `Waitlist again: ${email}`
         : `New launch signup: ${email}`,
-      text: `New newsletter signup\n\nEmail: ${email}\nSource: ${context}\nAlready on list: ${alreadySubscribed}\nTime: ${new Date().toISOString()}`,
+      text: `New newsletter signup\n\nEmail: ${email}\nSource: ${context}\nAlready on list: ${alreadySubscribed}\nTime: ${new Date().toISOString()}${listNote}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px;">
           <h2 style="color:#1a1a1a;">${alreadySubscribed ? "Repeat waitlist submit" : "New launch signup"}</h2>
@@ -49,12 +58,28 @@ export async function notifyNewSignup(
           <p><strong>Source:</strong> ${context}</p>
           <p><strong>Already on list:</strong> ${alreadySubscribed ? "yes" : "no"}</p>
           <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+          ${
+            attachment
+              ? `<p>The current master signup list is attached as ${attachment.filename} (newest first).</p>`
+              : ""
+          }
           <p style="color:#888; font-size:12px; margin-top:24px;">Next Point Coffee Co. automated notification</p>
         </div>
       `,
+      attachments: attachment
+        ? [
+            {
+              filename: attachment.filename,
+              content: attachment.content,
+              contentType: attachment.contentType,
+            },
+          ]
+        : undefined,
     });
   } catch (err) {
-    console.error("Failed to send signup notification email:", err);
+    // Log the failure only. Do not include the CSV or recipient list contents.
+    const detail = err instanceof Error ? err.message : "Unknown mail error";
+    console.error("Failed to send signup notification email:", detail);
   }
 }
 
