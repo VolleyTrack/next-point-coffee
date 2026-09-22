@@ -78,6 +78,19 @@ export interface PortalUser {
   email: string;
   organizationId?: string;
   athleteId?: string;
+  /** bcrypt hash. Never send this to the browser. Missing hash means the account cannot sign in. */
+  passwordHash?: string;
+}
+
+/** Portal user safe to render or return from APIs. */
+export type PublicPortalUser = Omit<PortalUser, "passwordHash">;
+
+/** Plaintext password returned once when an account is created. It is not stored. */
+export interface IssuedPortalCredential {
+  role: PortalRole;
+  name: string;
+  email: string;
+  temporaryPassword: string;
 }
 
 export interface BooksEvent {

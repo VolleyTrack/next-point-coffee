@@ -29,9 +29,9 @@ export default async function CampaignsIndexPage() {
         <CampaignRequestForm />
       </div>
       <p className="mt-8 text-sm text-muted-foreground">
-        Already a partner? Open the{" "}
-        <Link href="/campaigns/portal" className="text-gold hover:underline">
-          partner portal
+        Already a partner?{" "}
+        <Link href="/campaigns/login" className="text-gold hover:underline">
+          Sign in to the partner portal
         </Link>
         .
       </p>

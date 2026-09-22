@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { getPortalUser, portalUsersForSwitcher } from "@/lib/campaigns/auth";
+import { requirePortalPage } from "@/lib/campaigns/auth";
 import {
   listAllCampaigns,
   listBooksEvents,
@@ -24,27 +24,11 @@ import {
   UpdateBagShareForm,
 } from "@/components/campaigns/admin-forms";
 import { Badge } from "@/components/ui/badge";
-import { RoleSwitcher } from "@/components/campaigns/role-switcher";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const user = await getPortalUser();
-  if (!user || user.role !== "admin") {
-    const users = await portalUsersForSwitcher();
-    return (
-      <div className="mx-auto max-w-lg px-6 py-20">
-        <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Next Point Coffee Admin</p>
-        <h1 className="mt-2 text-3xl font-black text-np-cream">Switch to the admin demo user</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Prototype access only. Choose <span className="text-np-cream">Next Point Coffee Admin</span> in the role switcher.
-        </p>
-        <div className="mt-6">
-          <RoleSwitcher users={users} currentUserId={user?.id} />
-        </div>
-      </div>
-    );
-  }
+  await requirePortalPage(["admin"]);
 
   const [orgs, campaigns, sales, payouts, summaries, events, requests] = await Promise.all([
     listOrganizations(),

@@ -1,27 +1,21 @@
 import Link from "next/link";
-import { getPortalUser, portalUsersForSwitcher } from "@/lib/campaigns/auth";
+import { requirePortalPage } from "@/lib/campaigns/auth";
 import { getOrgSummary, listCampaignsForOrganization, listPayouts, listPartnerSales } from "@/lib/campaigns/store";
 import { formatUsd } from "@/lib/campaigns/money";
 import { formatPeriodLabel } from "@/lib/campaigns/payouts";
-import { RoleSwitcher } from "@/components/campaigns/role-switcher";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClubDashboardPage() {
-  const user = await getPortalUser();
-  if (!user || user.role !== "club" || !user.organizationId) {
-    const users = await portalUsersForSwitcher();
+  const user = await requirePortalPage(["club"]);
+  if (!user.organizationId) {
     return (
       <div className="mx-auto max-w-lg px-6 py-20">
-        <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Club dashboard</p>
-        <h1 className="mt-2 text-3xl font-black text-np-cream">Switch to a club demo user</h1>
+        <h1 className="text-3xl font-black text-np-cream">Club login is not linked</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Try Coach Rivera (Riverside) or Alex Kim (Athens Youth Foundation).
+          Ask Next Point Coffee to attach this login to an organization.
         </p>
-        <div className="mt-6">
-          <RoleSwitcher users={users} currentUserId={user?.id} />
-        </div>
       </div>
     );
   }

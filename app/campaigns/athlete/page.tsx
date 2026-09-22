@@ -1,27 +1,23 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { getPortalUser, portalUsersForSwitcher } from "@/lib/campaigns/auth";
+import { requirePortalPage } from "@/lib/campaigns/auth";
 import { listCampaignsForAthlete } from "@/lib/campaigns/store";
 import { formatUsd } from "@/lib/campaigns/money";
 import { campaignAbsoluteUrl } from "@/lib/campaigns/qr";
 import { QrPanel } from "@/components/campaigns/qr-panel";
-import { RoleSwitcher } from "@/components/campaigns/role-switcher";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
 export default async function AthleteDashboardPage() {
-  const user = await getPortalUser();
-  if (!user || user.role !== "athlete" || !user.athleteId) {
-    const users = await portalUsersForSwitcher();
+  const user = await requirePortalPage(["athlete"]);
+  if (!user.athleteId) {
     return (
       <div className="mx-auto max-w-lg px-6 py-20">
-        <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Athlete dashboard</p>
-        <h1 className="mt-2 text-3xl font-black text-np-cream">Switch to an athlete demo user</h1>
-        <p className="mt-3 text-sm text-muted-foreground">Maya Chen has a live campaign with seed progress.</p>
-        <div className="mt-6">
-          <RoleSwitcher users={users} currentUserId={user?.id} />
-        </div>
+        <h1 className="text-3xl font-black text-np-cream">Athlete login is not linked</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Ask Next Point Coffee to attach this login to an athlete.
+        </p>
       </div>
     );
   }

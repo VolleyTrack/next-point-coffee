@@ -6,8 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { CampaignRequest, CampaignWithRelations } from "@/lib/campaigns/types";
+import type { CampaignRequest, CampaignWithRelations, IssuedPortalCredential } from "@/lib/campaigns/types";
+import { CopyButton } from "@/components/campaigns/copy-button";
 import { Loader2 } from "lucide-react";
+
+function credentialRoleLabel(role: IssuedPortalCredential["role"]): string {
+  if (role === "club") return "Club";
+  if (role === "athlete") return "Athlete";
+  return "Next Point Coffee";
+}
+
+function credentialsPlainText(rows: IssuedPortalCredential[]): string {
+  return rows
+    .map(
+      (row) =>
+        `${credentialRoleLabel(row.role)} — ${row.name}\nEmail: ${row.email}\nTemporary password: ${row.temporaryPassword}`
+    )
+    .join("\n\n");
+}
 
 async function adminAction(body: Record<string, unknown>) {
   const res = await fetch("/api/campaigns/admin", {
@@ -32,6 +48,7 @@ export function CreateSetupForm({ initialRequest }: { initialRequest?: CampaignR
   const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
+  const [credentials, setCredentials] = useState<IssuedPortalCredential[] | null>(null);
   const [publish, setPublish] = useState(false);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -49,6 +66,7 @@ export function CreateSetupForm({ initialRequest }: { initialRequest?: CampaignR
     setStatus("loading");
     setError("");
     setOk("");
+    setCredentials(null);
     try {
       const data = await adminAction({
         action: "createSetup",
@@ -65,6 +83,8 @@ export function CreateSetupForm({ initialRequest }: { initialRequest?: CampaignR
         requestId: initialRequest?.id,
       });
       const slug = data.campaign?.slug as string | undefined;
+      const issued = Array.isArray(data.credentials) ? (data.credentials as IssuedPortalCredential[]) : [];
+      setCredentials(issued);
       setOk(
         publish && slug
           ? `Live. Share /campaigns/${slug} — that link and QR stay public for buyers.`
@@ -84,8 +104,9 @@ export function CreateSetupForm({ initialRequest }: { initialRequest?: CampaignR
     <form onSubmit={submit} className="rounded-lg border border-gold/20 bg-card p-6">
       <h2 className="text-xl font-black text-np-cream">Create a campaign</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Organization, athlete, and campaign in one place. Bag share is set on the organization — type does not lock
-        the amount.
+        Organization, athlete, and campaign in one place. This also creates one club login and one athlete login.
+        Passwords are shown once below so you can share them. Bag share is set on the organization — type does not
+        lock the amount.
       </p>
       {initialRequest && (
         <p className="mt-3 rounded-md border border-gold/30 bg-np-black px-3 py-2 text-sm text-gold">
@@ -196,6 +217,30 @@ export function CreateSetupForm({ initialRequest }: { initialRequest?: CampaignR
       </div>
       {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
       {ok && <p className="mt-3 text-sm text-gold">{ok}</p>}
+      {credentials && credentials.length > 0 && (
+        <div className="mt-6 rounded-md border border-gold/40 bg-np-black p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-widest-plus text-gold">Logins — shown once</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Share these with the club and the athlete. Next Point Coffee does not email them, and they will not
+                appear here again. Passwords are stored only as hashes.
+              </p>
+            </div>
+            <CopyButton value={credentialsPlainText(credentials)} label="Copy logins" />
+          </div>
+          <ul className="mt-4 space-y-4">
+            {credentials.map((row) => (
+              <li key={`${row.role}-${row.email}`} className="rounded-md border border-gold/20 px-4 py-3">
+                <p className="text-xs uppercase tracking-widest-plus text-gold">{credentialRoleLabel(row.role)}</p>
+                <p className="mt-1 font-semibold text-np-cream">{row.name}</p>
+                <p className="mt-2 text-sm text-muted-foreground">Email: {row.email}</p>
+                <p className="mt-1 font-mono text-sm text-np-cream">Password: {row.temporaryPassword}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </form>
   );
 }

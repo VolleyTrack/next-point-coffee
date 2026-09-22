@@ -1,20 +1,34 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { PORTAL_COOKIE } from "@/lib/campaigns/auth";
-import { getUserById, listUsers } from "@/lib/campaigns/store";
+import { getPortalUser } from "@/lib/campaigns/auth";
+import { portalHome, sanitizePortalNext } from "@/lib/campaigns/portal-paths";
 import { canAccessCampaigns, campaignsUnavailableResponse } from "@/lib/campaigns/preview-access";
+import {
+  LEGACY_PORTAL_COOKIE,
+  PORTAL_SESSION_COOKIE,
+  createPortalSessionToken,
+  portalSessionCookieOptions,
+  portalSessionSecret,
+} from "@/lib/campaigns/session-token";
+import { verifyPortalCredentials } from "@/lib/campaigns/store";
 
 export const dynamic = "force-dynamic";
+
+function clearCookie(response: NextResponse, name: string) {
+  response.cookies.set(name, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
+}
 
 export async function GET() {
   if (!(await canAccessCampaigns())) {
     return campaignsUnavailableResponse();
   }
-
-  const jar = await cookies();
-  const id = jar.get(PORTAL_COOKIE)?.value;
-  const user = id ? await getUserById(id) : null;
-  return NextResponse.json({ user, users: await listUsers() });
+  const user = await getPortalUser();
+  return NextResponse.json({ user });
 }
 
 export async function POST(request: Request) {
@@ -23,25 +37,41 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const userId = typeof body.userId === "string" ? body.userId : "";
-  const jar = await cookies();
-
-  if (!userId) {
-    jar.delete(PORTAL_COOKIE);
-    return NextResponse.json({ user: null });
+  const email = typeof body.email === "string" ? body.email : "";
+  const password = typeof body.password === "string" ? body.password : "";
+  if (!email.trim() || !password) {
+    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
 
-  const user = await getUserById(userId);
+  const secret = portalSessionSecret();
+  if (!secret) {
+    return NextResponse.json(
+      { error: "Partner sign-in is not configured. Set PORTAL_SESSION_SECRET or ADMIN_ACCESS_KEY." },
+      { status: 503 }
+    );
+  }
+
+  const user = await verifyPortalCredentials(email, password);
   if (!user) {
-    return NextResponse.json({ error: "Unknown demo user." }, { status: 400 });
+    return NextResponse.json({ error: "That email and password did not match." }, { status: 401 });
   }
 
-  jar.set(PORTAL_COOKIE, user.id, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  const token = await createPortalSessionToken(user.id, secret);
+  const redirectTo =
+    sanitizePortalNext(typeof body.next === "string" ? body.next : null, user.role) ?? portalHome(user.role);
 
-  return NextResponse.json({ user });
+  const response = NextResponse.json({ user, redirectTo });
+  response.cookies.set(PORTAL_SESSION_COOKIE, token, portalSessionCookieOptions());
+  clearCookie(response, LEGACY_PORTAL_COOKIE);
+  return response;
+}
+
+export async function DELETE() {
+  if (!(await canAccessCampaigns())) {
+    return campaignsUnavailableResponse();
+  }
+  const response = NextResponse.json({ user: null });
+  clearCookie(response, PORTAL_SESSION_COOKIE);
+  clearCookie(response, LEGACY_PORTAL_COOKIE);
+  return response;
 }

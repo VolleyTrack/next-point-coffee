@@ -179,6 +179,7 @@ export const SEED_STATE: CampaignStoreState = {
       role: "admin",
       name: "Next Point Coffee Admin",
       email: "admin@nextpointcoffee.com",
+      passwordHash: "$2b$10$6Zq8/96he7qV1HGmrexQ/.JGfT1ms1tksQtfUXcGm25cD28kA/g4S",
     },
     {
       id: "user-club-riverside",
@@ -186,6 +187,7 @@ export const SEED_STATE: CampaignStoreState = {
       name: "Coach Rivera",
       email: "coach@riversidevc.example",
       organizationId: "org-riverside",
+      passwordHash: "$2b$10$XUMDdSqblWDDGwh/j2Fqd.nC5FNk/9hcjtB4Yv5.oekY9Uv8X9vg.",
     },
     {
       id: "user-club-athens",
@@ -193,6 +195,7 @@ export const SEED_STATE: CampaignStoreState = {
       name: "Alex Kim",
       email: "hello@athensyouth.example",
       organizationId: "org-athens",
+      passwordHash: "$2b$10$oJnSPzxovlqsyAiSO6WtFe3AbTf7wYRsGCxaCGQFwQuL2cGRg8//e",
     },
     {
       id: "user-athlete-maya",
@@ -201,6 +204,7 @@ export const SEED_STATE: CampaignStoreState = {
       email: "maya@riversidevc.example",
       organizationId: "org-riverside",
       athleteId: "athlete-maya",
+      passwordHash: "$2b$10$RkThLwId65hgcYhX9A29c.mDExagPGnzdKTZdVXylvglpjovd20/S",
     },
     {
       id: "user-athlete-jordan",
@@ -209,6 +213,7 @@ export const SEED_STATE: CampaignStoreState = {
       email: "jordan@riversidevc.example",
       organizationId: "org-riverside",
       athleteId: "athlete-jordan",
+      passwordHash: "$2b$10$gs9M0oooAXH0bomhKCMyaeOPK7OkMj4VQIE//pEphZ88ZLxZAaY.y",
     },
     {
       id: "user-athlete-sam",
@@ -217,6 +222,7 @@ export const SEED_STATE: CampaignStoreState = {
       email: "sam@athensyouth.example",
       organizationId: "org-athens",
       athleteId: "athlete-sam",
+      passwordHash: "$2b$10$SgNY.FwGNygNJMGAAc5.ZuPJVBh.AlvxpHRs4bWOs73avd.LD2wBO",
     },
   ],
   campaignRequests: [
