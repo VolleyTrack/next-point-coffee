@@ -12,6 +12,9 @@ export default function ShopPage() {
             ? "First Serve and Second Wind are ready to order now. Half Caff is brewing next."
             : "First Serve and Second Wind are almost here - Half Caff is next up after that. Join the list and we'll email you the moment checkout opens."}
         </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Bag prices include shipping within the United States.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">

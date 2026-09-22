@@ -7,8 +7,8 @@ export default function ShippingReturnsPage() {
         <h2 className="text-lg font-bold text-np-cream">Shipping</h2>
         <p>
           Orders are typically processed within 1-3 business days. Standard domestic shipping
-          takes an additional 3-7 business days. A flat shipping fee is added at checkout. We
-          currently ship within the United States only.
+          takes an additional 3-7 business days. Shipping is included in the listed bag price.
+          We currently ship within the United States only.
         </p>
         <h2 className="text-lg font-bold text-np-cream">Returns & Refunds</h2>
         <p>

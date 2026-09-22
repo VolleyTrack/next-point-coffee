@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { products, flatShippingCents, storeLive } from "@/lib/site";
+import { products, retailMaxQuantity, storeLive } from "@/lib/site";
 
 interface CartItem {
   slug: string;
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     if (!product || !product.purchasable) {
       throw new Error(`Invalid or unavailable product: ${item.slug}`);
     }
-    const quantity = Math.max(1, Math.min(20, Math.floor(item.quantity) || 1));
+    const quantity = Math.max(1, Math.min(retailMaxQuantity, Math.floor(item.quantity) || 1));
     return {
       price_data: {
         currency: "usd",
@@ -45,23 +45,11 @@ export async function POST(request: Request) {
     const stripe = getStripe();
     const origin = request.headers.get("origin") || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
 
+    // Shipping is included in product.priceCents. Collect an address for fulfillment only.
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items,
       shipping_address_collection: { allowed_countries: ["US"] },
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            fixed_amount: { amount: flatShippingCents, currency: "usd" },
-            display_name: "Standard Shipping",
-            delivery_estimate: {
-              minimum: { unit: "business_day", value: 3 },
-              maximum: { unit: "business_day", value: 7 },
-            },
-          },
-        },
-      ],
       success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop`,
     });
