@@ -3,7 +3,13 @@ import path from "path";
 import { products } from "@/lib/site";
 import { SEED_STATE } from "./seed";
 import { earningsPerBagCents, slugify } from "./money";
-import { DUMMY_PASSWORD_HASH, generateTemporaryPassword, hashPassword, verifyPassword } from "./passwords";
+import {
+  DUMMY_PASSWORD_HASH,
+  applyPortalPasswordChange,
+  generateTemporaryPassword,
+  hashPassword,
+  verifyPassword,
+} from "./passwords";
 import { biweeklyWindow } from "./payouts";
 import { buildPayoutBooksEvent, buildSaleBooksEvent, pushBooksEvent, syncBooksEvents } from "./books";
 import type {
@@ -282,6 +288,19 @@ export async function verifyPortalCredentials(
   return toPublicPortalUser(user);
 }
 
+export async function changePortalPassword(
+  userId: string,
+  password: string,
+  confirm: string
+): Promise<PublicPortalUser> {
+  return mutate(async (state) => {
+    const user = state.users.find((row) => row.id === userId);
+    if (!user) throw new Error("Account not found.");
+    await applyPortalPasswordChange(user, password, confirm);
+    return toPublicPortalUser(user);
+  });
+}
+
 async function preparePortalUser(
   state: CampaignStoreState,
   input: {
@@ -311,6 +330,7 @@ async function preparePortalUser(
     organizationId: input.organizationId,
     athleteId: input.athleteId,
     passwordHash,
+    mustChangePassword: true,
   };
   return {
     user,

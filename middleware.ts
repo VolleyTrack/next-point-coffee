@@ -22,6 +22,8 @@ function previewGateOpen(): boolean {
  * cookie as the exception. Partner pages (portal, club, athlete, admin) also
  * require a signed email/password session. Buyer pages — /campaigns, a live
  * /campaigns/[slug] link, and /campaigns/thanks — do not.
+ * A temporary password still gets a session, but portal pages redirect to
+ * /campaigns/change-password until that password is replaced.
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

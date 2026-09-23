@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPortalUser } from "@/lib/campaigns/auth";
+import { emailPartnerTemporaryPasswords } from "@/lib/mailer";
 import {
   closeCampaign,
   computeCurrentPayouts,
@@ -14,17 +15,34 @@ import {
   publishCampaign,
   resetStore,
 } from "@/lib/campaigns/store";
-import type { OrganizationType } from "@/lib/campaigns/types";
+import type { IssuedPortalCredential, OrganizationType } from "@/lib/campaigns/types";
 import { canAccessCampaigns, campaignsUnavailableResponse } from "@/lib/campaigns/preview-access";
 
 export const dynamic = "force-dynamic";
 
-async function requireAdmin() {
+async function requireAdmin(): Promise<"ok" | "signin" | "password"> {
   const user = await getPortalUser();
-  if (!user || user.role !== "admin") {
-    return null;
+  if (!user || user.role !== "admin") return "signin";
+  if (user.mustChangePassword) return "password";
+  return "ok";
+}
+
+async function withLoginEmails<T>(
+  payload: T,
+  credentials: IssuedPortalCredential[],
+  context?: { organizationName?: string; campaignName?: string }
+): Promise<T & { emailWarning: string | null }> {
+  try {
+    const emailWarning = await emailPartnerTemporaryPasswords(credentials, context);
+    return { ...payload, emailWarning };
+  } catch (err) {
+    console.error("Partner login email failed:", err instanceof Error ? err.message : err);
+    return {
+      ...payload,
+      emailWarning:
+        "Logins were created, but the temporary-password email failed. Copy the passwords below and send them yourself.",
+    };
   }
-  return user;
 }
 
 export async function POST(request: Request) {
@@ -32,7 +50,11 @@ export async function POST(request: Request) {
     return campaignsUnavailableResponse();
   }
 
-  if (!(await requireAdmin())) {
+  const adminGate = await requireAdmin();
+  if (adminGate === "password") {
+    return NextResponse.json({ error: "Set a new password before using the portal." }, { status: 403 });
+  }
+  if (adminGate !== "ok") {
     return NextResponse.json({ error: "Next Point Coffee admin role required." }, { status: 401 });
   }
 
@@ -58,7 +80,11 @@ export async function POST(request: Request) {
           contactEmail,
           bagShareCents,
         });
-        return NextResponse.json({ organization, credential });
+        return NextResponse.json(
+          await withLoginEmails({ organization, credential }, [credential], {
+            organizationName: organization.name,
+          })
+        );
       }
       case "updateOrganization": {
         const organizationId = String(body.organizationId ?? "");
@@ -80,7 +106,7 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: "Organization, name, and email are required." }, { status: 400 });
         }
         const { athlete, credential } = await createAthlete({ organizationId, name, email });
-        return NextResponse.json({ athlete, credential });
+        return NextResponse.json(await withLoginEmails({ athlete, credential }, [credential]));
       }
       case "createSetup": {
         const organizationName = String(body.organizationName ?? "").trim();
@@ -125,7 +151,12 @@ export async function POST(request: Request) {
         if (requestId) {
           await markCampaignRequestHandled(requestId).catch(() => undefined);
         }
-        return NextResponse.json(setup);
+        return NextResponse.json(
+          await withLoginEmails(setup, setup.credentials, {
+            organizationName: setup.organization.name,
+            campaignName: setup.campaign.name,
+          })
+        );
       }
       case "markRequestHandled": {
         const requestId = String(body.requestId ?? "");
@@ -149,7 +180,9 @@ export async function POST(request: Request) {
           story,
           goalBags,
         });
-        return NextResponse.json({ campaign, credentials });
+        return NextResponse.json(
+          await withLoginEmails({ campaign, credentials }, credentials, { campaignName: campaign.name })
+        );
       }
       case "publishCampaign": {
         const campaignId = String(body.campaignId ?? "");
