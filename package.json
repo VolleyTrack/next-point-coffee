@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --test lib/signups-csv.test.ts lib/campaigns/portal-auth.test.ts lib/campaigns/logout.test.ts lib/campaigns/login-email.test.ts lib/campaigns/password-change.test.ts lib/campaigns/ledger.test.ts"
+    "test": "node --experimental-strip-types --test lib/signups-csv.test.ts lib/campaigns/portal-auth.test.ts lib/campaigns/logout.test.ts lib/campaigns/login-email.test.ts lib/campaigns/password-change.test.ts lib/campaigns/ledger.test.ts lib/books/order-ingest.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.2",

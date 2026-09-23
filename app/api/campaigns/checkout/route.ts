@@ -89,7 +89,9 @@ export async function POST(request: Request) {
         },
       ],
       metadata: {
+        channel: "campaign",
         campaignId: campaign.id,
+        campaignName: campaign.name,
         campaignSlug: campaign.slug,
         athleteId: campaign.athleteId,
         organizationId: campaign.organizationId,

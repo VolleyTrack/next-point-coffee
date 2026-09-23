@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       shipping_address_collection: { allowed_countries: ["US"] },
       success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop`,
+      metadata: { channel: "retail" },
     });
 
     return NextResponse.json({ url: session.url });
