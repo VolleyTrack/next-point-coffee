@@ -12,6 +12,14 @@ import {
 } from "./passwords";
 import { biweeklyWindow } from "./payouts";
 import { buildPayoutBooksEvent, buildSaleBooksEvent, pushBooksEvent, syncBooksEvents } from "./books";
+import {
+  campaignsUseSupabase,
+  commitCampaignWrite,
+  mergeSeedState,
+  readCampaignSnapshot,
+  supabaseLedgerConfig,
+  writeCampaignSnapshot,
+} from "./ledger";
 import type {
   Athlete,
   BooksEvent,
@@ -34,11 +42,11 @@ import type {
 const globalForStore = globalThis as unknown as {
   __npcCampaignStore?: CampaignStoreState;
   __npcCampaignStoreQueue?: Promise<unknown>;
+  __npcSupabaseCanonical?: { version: number; state: CampaignStoreState };
 };
 
 function dataFilePath(): string {
   if (process.env.CAMPAIGNS_DATA_PATH) return process.env.CAMPAIGNS_DATA_PATH;
-  if (process.env.VERCEL) return path.join("/tmp", "npc-campaigns-store.json");
   return path.join(process.cwd(), "data", "campaigns-store.json");
 }
 
@@ -141,7 +149,21 @@ async function writeFileState(state: CampaignStoreState): Promise<void> {
   }
 }
 
-async function loadState(): Promise<CampaignStoreState> {
+function canonicalFromDurable(durable: CampaignStoreState | null): CampaignStoreState {
+  const state = mergeSeedState(durable, SEED_STATE);
+  migrateUserFacingCopy(state);
+  migratePasswordHashes(state);
+  return state;
+}
+
+/** Demo-password lock is a view. It is not written, so seed hashes stay restorable. */
+function presentState(state: CampaignStoreState): CampaignStoreState {
+  const view = cloneState(state);
+  lockCommittedDemoPasswords(view);
+  return view;
+}
+
+async function loadFileState(): Promise<CampaignStoreState> {
   if (globalForStore.__npcCampaignStore) {
     const state = globalForStore.__npcCampaignStore;
     migrateUserFacingCopy(state);
@@ -150,24 +172,88 @@ async function loadState(): Promise<CampaignStoreState> {
     return state;
   }
   const fromDisk = await readFileState();
-  const state = cloneState(fromDisk ?? SEED_STATE);
-  migrateUserFacingCopy(state);
-  migratePasswordHashes(state);
+  const state = canonicalFromDurable(fromDisk);
   const adminChanged = await applyEnvAdminPassword(state);
   lockCommittedDemoPasswords(state);
   globalForStore.__npcCampaignStore = state;
-  if (!fromDisk || adminChanged) await writeFileState(state);
+  if ((!fromDisk || adminChanged) && !process.env.VERCEL) await writeFileState(state);
   return state;
 }
 
+async function loadSupabaseState(): Promise<CampaignStoreState> {
+  const config = supabaseLedgerConfig();
+  if (!config) throw new Error("Supabase campaign store is not configured.");
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const snapshot = await readCampaignSnapshot(config);
+    const cached = globalForStore.__npcSupabaseCanonical;
+    if (cached && cached.version === snapshot.version) return presentState(cached.state);
+    const state = canonicalFromDurable(snapshot.state);
+    const adminChanged = await applyEnvAdminPassword(state);
+    if (!adminChanged) {
+      globalForStore.__npcSupabaseCanonical = { version: snapshot.version, state };
+      return presentState(state);
+    }
+    const wrote = await writeCampaignSnapshot(config, state, snapshot.version);
+    if (wrote === "ok") {
+      const version = snapshot.version <= 0 ? 1 : snapshot.version + 1;
+      globalForStore.__npcSupabaseCanonical = { version, state };
+      return presentState(state);
+    }
+    globalForStore.__npcSupabaseCanonical = undefined;
+  }
+  const snapshot = await readCampaignSnapshot(config);
+  const state = canonicalFromDurable(snapshot.state);
+  await applyEnvAdminPassword(state);
+  globalForStore.__npcSupabaseCanonical = undefined;
+  return presentState(state);
+}
+
+async function loadState(): Promise<CampaignStoreState> {
+  if (campaignsUseSupabase()) return loadSupabaseState();
+  return loadFileState();
+}
+
+async function mutateFile<T>(fn: (state: CampaignStoreState) => T | Promise<T>): Promise<T> {
+  if (process.env.VERCEL) {
+    throw new Error(
+      "Campaign data cannot be saved on this server. Set SUPABASE_URL and SUPABASE_SERVICE_KEY."
+    );
+  }
+  const state = await loadFileState();
+  const result = await fn(state);
+  globalForStore.__npcCampaignStore = state;
+  await writeFileState(state);
+  return result;
+}
+
+async function mutateSupabase<T>(fn: (state: CampaignStoreState) => T | Promise<T>): Promise<T> {
+  const config = supabaseLedgerConfig();
+  if (!config) throw new Error("Supabase campaign store is not configured.");
+  return commitCampaignWrite({
+    read: async () => {
+      const snapshot = await readCampaignSnapshot(config);
+      const state = canonicalFromDurable(snapshot.state);
+      await applyEnvAdminPassword(state);
+      return { state, version: snapshot.version };
+    },
+    write: async (state, expectedVersion) => {
+      const outcome = await writeCampaignSnapshot(config, state, expectedVersion);
+      if (outcome === "ok") {
+        globalForStore.__npcSupabaseCanonical = {
+          version: expectedVersion <= 0 ? 1 : expectedVersion + 1,
+          state,
+        };
+      } else {
+        globalForStore.__npcSupabaseCanonical = undefined;
+      }
+      return outcome;
+    },
+    change: (state) => fn(state),
+  });
+}
+
 async function mutate<T>(fn: (state: CampaignStoreState) => T | Promise<T>): Promise<T> {
-  const run = async () => {
-    const state = await loadState();
-    const result = await fn(state);
-    globalForStore.__npcCampaignStore = state;
-    await writeFileState(state);
-    return result;
-  };
+  const run = () => (campaignsUseSupabase() ? mutateSupabase(fn) : mutateFile(fn));
   const queued = (globalForStore.__npcCampaignStoreQueue ?? Promise.resolve()).then(run, run);
   globalForStore.__npcCampaignStoreQueue = queued.then(
     () => undefined,
