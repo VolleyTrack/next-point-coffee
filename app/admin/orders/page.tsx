@@ -13,6 +13,11 @@ interface OrderRow {
   currency: string;
   payment_status: string;
   fulfillment_status: string;
+  channel?: "retail" | "campaign";
+  campaign_name?: string | null;
+  campaign_share_owed?: number | null;
+  books_sync_status?: "pending" | "synced" | "failed" | "skipped";
+  books_last_error?: string | null;
   created_at: string;
 }
 
@@ -21,6 +26,7 @@ export default function AdminOrdersPage() {
   const [rows, setRows] = useState<OrderRow[] | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
+  const [retryNote, setRetryNote] = useState("");
 
   async function unlock() {
     setStatus("loading");
@@ -38,6 +44,31 @@ export default function AdminOrdersPage() {
       setStatus("idle");
     } catch {
       setError("Something went wrong loading orders.");
+      setStatus("idle");
+    }
+  }
+
+  async function retryBooks() {
+    setStatus("loading");
+    setRetryNote("");
+    setError("");
+    try {
+      const res = await fetch("/api/admin/orders/retry-books", {
+        method: "POST",
+        headers: { "x-admin-key": key },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Could not retry books sync.");
+        setStatus("idle");
+        return;
+      }
+      setRetryNote(
+        `Books retry: ${data.attempted} attempted, ${data.synced} synced, ${data.failed} failed, ${data.skipped} skipped.`
+      );
+      await unlock();
+    } catch {
+      setError("Could not retry books sync.");
       setStatus("idle");
     }
   }
@@ -72,21 +103,35 @@ export default function AdminOrdersPage() {
   const totalRevenue = rows.reduce((sum, r) => sum + r.amount_total, 0) / 100;
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16">
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-np-cream">Orders</h1>
-        <p className="text-sm text-muted-foreground">
-          {rows.length} orders &middot; ${totalRevenue.toFixed(2)} total revenue
-        </p>
+    <div className="mx-auto max-w-6xl px-6 py-16">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-np-cream">Orders</h1>
+          <p className="text-sm text-muted-foreground">
+            {rows.length} orders &middot; ${totalRevenue.toFixed(2)} total revenue
+          </p>
+        </div>
+        <Button
+          onClick={retryBooks}
+          disabled={status === "loading"}
+          variant="outline"
+          className="border-gold/40 text-np-cream"
+        >
+          {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Retry books sync"}
+        </Button>
       </div>
+      {retryNote && <p className="mb-4 text-sm text-muted-foreground">{retryNote}</p>}
+      {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
-      <div className="overflow-hidden rounded-lg border border-gold/20">
+      <div className="overflow-x-auto rounded-lg border border-gold/20">
         <table className="w-full text-left text-sm">
           <thead className="bg-card text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Total</th>
+              <th className="px-4 py-3">Channel</th>
+              <th className="px-4 py-3">Books</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Date</th>
             </tr>
@@ -99,6 +144,21 @@ export default function AdminOrdersPage() {
                 <td className="px-4 py-3 text-muted-foreground">
                   ${(row.amount_total / 100).toFixed(2)}
                 </td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {row.channel || "—"}
+                  {row.channel === "campaign" && row.campaign_name ? (
+                    <span className="block text-xs">{row.campaign_name}</span>
+                  ) : null}
+                  {row.channel === "campaign" && row.campaign_share_owed != null ? (
+                    <span className="block text-xs">share ${(row.campaign_share_owed / 100).toFixed(2)}</span>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3 text-muted-foreground" title={row.books_last_error || undefined}>
+                  {row.books_sync_status || "—"}
+                  {row.books_last_error ? (
+                    <span className="block max-w-[16rem] truncate text-xs text-red-300">{row.books_last_error}</span>
+                  ) : null}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">{row.fulfillment_status}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {new Date(row.created_at).toLocaleString()}
@@ -107,7 +167,7 @@ export default function AdminOrdersPage() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">
                   No orders yet.
                 </td>
               </tr>

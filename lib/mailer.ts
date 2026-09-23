@@ -217,6 +217,47 @@ export async function emailPartnerTemporaryPasswords(
   return summarizePartnerEmailDelivery(results);
 }
 
+/**
+ * Internal alert when a paid order could not be stored in books.
+ * Uses the same Gmail account and NOTIFY_EMAIL inbox as other site alerts.
+ * Does not throw.
+ */
+export async function notifyBooksIngestFailure(notice: { subject: string; text: string }): Promise<void> {
+  const t = getTransporter();
+  const to = notifyAddress();
+  if (!t || !to) {
+    console.error(
+      JSON.stringify({
+        source: "next-point-coffee",
+        event: "books.ingest.email_unconfigured",
+        email_subject: notice.subject,
+        email_text: notice.text,
+      })
+    );
+    return;
+  }
+
+  try {
+    await t.sendMail({
+      from: `"Next Point Coffee" <${process.env.GMAIL_USER}>`,
+      to,
+      subject: notice.subject,
+      text: notice.text,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : "Unknown mail error";
+    console.error(
+      JSON.stringify({
+        source: "next-point-coffee",
+        event: "books.ingest.email_failed",
+        error: detail,
+        email_subject: notice.subject,
+        email_text: notice.text,
+      })
+    );
+  }
+}
+
 export async function notifyContactForm(name: string, email: string, message: string): Promise<void> {
   const t = getTransporter();
   const to = notifyAddress();

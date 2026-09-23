@@ -111,7 +111,11 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 
 Existing Stripe + Supabase REST for shop orders/newsletter is unchanged. Campaign Stripe checkouts attach metadata; the webhook writes the campaign ledger when those fields are present.
 
-Optional env vars are listed in `.env.example`. The accounting app is [VolleyTrack/nextpoint-books](https://github.com/VolleyTrack/nextpoint-books) (private; not readable from this environment). This repo exposes `GET /api/books/contract`, `GET /api/books/export`, and optional `BOOKS_WEBHOOK_URL` + `BOOKS_API_KEY` push. Types are in `lib/campaigns/books-contract.ts`. See `docs/books-integration.md`.
+Optional env vars are listed in `.env.example`. The accounting app is [VolleyTrack/nextpoint-books](https://github.com/VolleyTrack/nextpoint-books) (private; not readable from this environment).
+
+Paid Stripe orders (retail and campaign) are saved on `public.orders` with `channel`, `campaign_id`, and `books_sync_status`, then POSTed to `BOOKS_INGEST_URL`. The webhook still returns success if books is down; the order stores the error and the usual Gmail alert path emails it. Set `BOOKS_ORDER_INGEST=true` outside production to force that path. See `docs/books-integration.md` for the JSON body and how to test (`npm test` runs `lib/books/order-ingest.test.ts`).
+
+This repo also exposes `GET /api/books/contract`, `GET /api/books/export`, and optional `BOOKS_WEBHOOK_URL` + `BOOKS_API_KEY` for the campaign ledger event stream (including payouts). That webhook is separate from paid-order ingest. Types are in `lib/campaigns/books-contract.ts` and `lib/books/order-ingest.ts`.
 
 ## Next Point Coffee Books (hosted under this domain)
 
