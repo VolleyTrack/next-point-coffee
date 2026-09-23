@@ -9,8 +9,8 @@ export default function ShopPage() {
         <h1 className="mt-2 text-4xl font-black text-np-cream sm:text-5xl">The Lineup</h1>
         <p className="mt-4 text-muted-foreground">
           {storeLive
-            ? "First Serve and Second Wind are ready to order now. Half Caff is brewing next."
-            : "First Serve and Second Wind are almost here - Half Caff is next up after that. Join the list and we'll email you the moment checkout opens."}
+            ? "Pre-order First Serve or Second Wind. Choose Ground or Whole bean. Half Caff is brewing next."
+            : "First Serve and Second Wind are almost here - Ground or Whole bean. Half Caff is next up after that. Join the list and we'll email you the moment checkout opens."}
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           Bag prices include shipping within the United States.

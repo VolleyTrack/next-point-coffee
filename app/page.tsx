@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { ProductCard } from "@/components/product-card";
-import { site, products } from "@/lib/site";
+import { site, products, storeLive } from "@/lib/site";
 import { ArrowRight, DollarSign, Users, Heart, TrendingUp } from "lucide-react";
 
 export default function HomePage() {
@@ -16,7 +16,7 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-14 sm:py-20 md:grid-cols-2 md:py-28">
           <div>
             <p className="mb-4 text-xs font-semibold uppercase tracking-widest-plus text-gold">
-              Est. {site.establishedYear} &middot; First bags almost here
+              Est. {site.establishedYear} &middot; {storeLive ? "Pre-order open" : "First bags almost here"}
             </p>
             <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-np-cream sm:text-5xl md:text-6xl md:leading-[1.05]">
               {"You Can't Change the Last Point."}
@@ -24,13 +24,23 @@ export default function HomePage() {
             </h1>
             <p className="mt-6 max-w-md text-lg text-muted-foreground">{site.mission}</p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <WaitlistForm ctaLabel="Get Launch Updates" context="homepage-hero" />
+              {storeLive ? (
+                <Button asChild className="bg-gold text-np-black hover:bg-gold/90">
+                  <Link href="/shop">
+                    Pre-order coffee <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <WaitlistForm ctaLabel="Get Launch Updates" context="homepage-hero" />
+              )}
             </div>
-            <div className="mt-6 flex items-center gap-2">
-              <Link href="/shop" className="inline-flex items-center gap-1 text-sm font-semibold text-gold hover:underline">
-                Preview the coffee <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+            {!storeLive && (
+              <div className="mt-6 flex items-center gap-2">
+                <Link href="/shop" className="inline-flex items-center gap-1 text-sm font-semibold text-gold hover:underline">
+                  Preview the coffee <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="relative mx-auto w-full max-w-sm">
@@ -85,7 +95,9 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="mb-8 flex items-end justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Available First</p>
+            <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">
+              {storeLive ? "Pre-order" : "Available First"}
+            </p>
             <h2 className="text-3xl font-black text-np-cream">Meet the lineup</h2>
           </div>
           <Link href="/shop" className="text-sm font-semibold text-gold hover:underline">

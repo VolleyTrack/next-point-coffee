@@ -30,6 +30,30 @@ export const flatShippingCents = 650;
 /** Max bags on one retail checkout line. /api/checkout clamps to this range. */
 export const retailMaxQuantity = 20;
 
+/**
+ * Launch forms for each buyable coffee. Customer labels are Ground and Whole bean.
+ * Half Caff stays off the buyable catalog until it is marked purchasable.
+ */
+export const grindOptions = [
+  { id: "ground", label: "Ground" },
+  { id: "whole-bean", label: "Whole bean" },
+] as const;
+
+export type GrindId = (typeof grindOptions)[number]["id"];
+
+export function isGrindId(value: unknown): value is GrindId {
+  return grindOptions.some((option) => option.id === value);
+}
+
+export function grindLabel(id: GrindId): string {
+  return grindOptions.find((option) => option.id === id)?.label ?? id;
+}
+
+/** Stripe product name. Fulfillment reads ground vs whole bean from this title. */
+export function retailProductTitle(productName: string, grind: GrindId): string {
+  return `${productName} — ${grindLabel(grind)}`;
+}
+
 export interface Product {
   slug: string;
   name: string;

@@ -1,4 +1,4 @@
-import { site } from "@/lib/site";
+import { site, storeLive } from "@/lib/site";
 
 export default function AboutPage() {
   return (
@@ -39,7 +39,9 @@ export default function AboutPage() {
       </div>
 
       <p className="mt-12 text-sm text-muted-foreground">
-        Shop is not live yet. Join the list and we will email you when First Serve and Second Wind go on sale.
+        {storeLive
+          ? "First Serve and Second Wind are open for pre-order. Choose Ground or Whole bean in the shop."
+          : "Shop is not live yet. Join the list and we will email you when First Serve and Second Wind go on sale."}
       </p>
     </div>
   );

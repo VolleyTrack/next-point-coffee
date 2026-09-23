@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
+import { retailCheckoutMetadata, resolveRetailCart, toStripeLineItem } from "@/lib/retail-checkout";
 import { getStripe } from "@/lib/stripe";
-import { products, retailMaxQuantity, storeLive } from "@/lib/site";
-
-interface CartItem {
-  slug: string;
-  quantity: number;
-}
+import { storeLive } from "@/lib/site";
 
 export async function POST(request: Request) {
   if (!storeLive) {
@@ -15,31 +11,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json();
-  const items: CartItem[] = body?.items ?? [];
-
-  if (!Array.isArray(items) || items.length === 0) {
+  let body: { items?: unknown };
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
   }
 
-  const line_items = items.map((item) => {
-    const product = products.find((p) => p.slug === item.slug);
-    if (!product || !product.purchasable) {
-      throw new Error(`Invalid or unavailable product: ${item.slug}`);
-    }
-    const quantity = Math.max(1, Math.min(retailMaxQuantity, Math.floor(item.quantity) || 1));
-    return {
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: `${product.name} — ${product.roast}`,
-          description: product.tastingNotes,
-        },
-        unit_amount: product.priceCents,
-      },
-      quantity,
-    };
-  });
+  const cart = resolveRetailCart(body?.items);
+  if (!cart.ok) {
+    return NextResponse.json({ error: cart.error }, { status: cart.status });
+  }
+
+  const line_items = cart.lines.map(toStripeLineItem);
 
   try {
     const stripe = getStripe();
@@ -52,7 +36,7 @@ export async function POST(request: Request) {
       shipping_address_collection: { allowed_countries: ["US"] },
       success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop`,
-      metadata: { channel: "retail" },
+      metadata: retailCheckoutMetadata(cart.lines),
     });
 
     return NextResponse.json({ url: session.url });
