@@ -106,9 +106,8 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 | Real | Stubbed |
 | --- | --- |
 | Campaign CRUD, publish, QR, public pages, partner email/password login, temporary-password email via existing Gmail SMTP, forced password change on first sign-in | Password email when `GMAIL_USER` or `GMAIL_APP_PASSWORD` is missing (create still succeeds and shows the passwords) |
-| Durable sales ledger (local JSON, `data/campaigns-store.json`) | Stripe checkout unless `NEXT_PUBLIC_STORE_LIVE=true` and `STRIPE_SECRET_KEY` are set |
-| Per-org bag share (set on create) | Books UI — events export + optional webhook only |
-| Biweekly payout compute / mark paid | Remote Supabase tables (SQL is in `supabase/campaigns.sql`) |
+| Campaign ledger in Supabase `campaign_store` (orgs, campaigns, partner users, password changes). Required on Vercel via `SUPABASE_URL` and `SUPABASE_SERVICE_KEY`. Local dev without those vars uses `data/campaigns-store.json`. | Stripe checkout unless `NEXT_PUBLIC_STORE_LIVE=true` and `STRIPE_SECRET_KEY` are set |
+| Per-org bag share (set on create) and biweekly payout compute / mark paid | Books UI — events export + optional webhook only |
 
 Existing Stripe + Supabase REST for shop orders/newsletter is unchanged. Campaign Stripe checkouts attach metadata; the webhook writes the campaign ledger when those fields are present.
 

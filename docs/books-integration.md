@@ -85,4 +85,4 @@ Athletes never see a sales list (no admin / “your name” rows, no other athle
 
 ## Local schema
 
-`supabase/campaigns.sql` is the optional production table set for *this* app. Books should keep its own journals and only store foreign keys to these ids.
+`supabase/campaigns.sql` is the production ledger for this app: one `campaign_store` row (`id = ledger`) holding orgs, campaigns, sales, and portal users. Books should keep its own journals and only store foreign keys to ids inside that document. It should not read the row directly; password hashes are in it, and only the service role can.

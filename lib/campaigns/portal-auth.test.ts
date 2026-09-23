@@ -61,7 +61,7 @@ test("session token is signed, expires, and rejects tampering", async () => {
 test("passwords are bcrypt hashes and temporary passwords are shareable", async () => {
   const password = generateTemporaryPassword();
   assert.equal(password.length, 14);
-  assert.match(password, /^[A-HJ-NP-Za-hjkm-np-z2-9]+$/);
+  assert.match(password, /^[A-HJ-NP-Za-km-z2-9]+$/);
   const hashed = await hashPassword(password);
   assert.notEqual(hashed, password);
   assert.match(hashed, /^\$2[ab]\$/);
