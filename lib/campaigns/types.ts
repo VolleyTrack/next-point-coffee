@@ -80,6 +80,12 @@ export interface PortalUser {
   athleteId?: string;
   /** bcrypt hash. Never send this to the browser. Missing hash means the account cannot sign in. */
   passwordHash?: string;
+  /**
+   * Set when an admin create issues a temporary password.
+   * Partner routes stay closed until the user replaces it.
+   * Seed/demo accounts set this false so README logins can sign in.
+   */
+  mustChangePassword?: boolean;
 }
 
 /** Portal user safe to render or return from APIs. */

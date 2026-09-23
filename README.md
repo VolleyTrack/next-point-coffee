@@ -58,6 +58,7 @@ Routes live under `/campaigns` (gated as above).
 | `/campaigns` | Public when live; coming soon + unlock when not | Request-to-start form (not an open campaign catalog) |
 | `/campaigns/[slug]` | Buyers (when live or preview unlocked) | Published campaign page, purchase, share link + QR |
 | `/campaigns/login` | Partners | Email + password. Unauthenticated visits to portal, club, athlete, and admin redirect here. |
+| `/campaigns/change-password` | Partner with a temporary password | Required before portal, club, athlete, or admin will open. |
 | `/campaigns/portal` | Signed-in partner | Home for the account you signed in as |
 | `/campaigns/admin` | Next Point Coffee Admin | One create flow, incoming requests, publish, ledger, payouts |
 | `/campaigns/club` | Club | All athlete campaigns for that org, owed / paid |
@@ -68,7 +69,11 @@ Buyer pages stay public once the launch gate (or preview unlock) lets the reques
 
 ### Partner sign-in
 
-Passwords are stored as bcrypt hashes. Creating a campaign issues one club login and one athlete login and shows the temporary passwords **once** on the admin create screen (they are not emailed).
+Passwords are stored as bcrypt hashes. Creating a campaign issues one club login and one athlete login, shows the temporary passwords **once** on the admin create screen, and emails each one from `GMAIL_USER` (use `ryan@nextpointcoffee.com`) to the club email and athlete email on the form. The Next Point Coffee admin password is not emailed. If Gmail is unset or the send fails, the campaign and logins are still created, the passwords stay on screen, and the admin sees a warning.
+
+Those new logins have `mustChangePassword` set. The first successful sign-in opens `/campaigns/change-password` and portal, club, athlete, and admin stay closed until the new password is saved (at least 8 characters, confirmed, and not the temporary password). The session cookie is unchanged: httpOnly HMAC, no `Max-Age` (ends when the browser closes), cleared by the logout POST.
+
+Seed demo accounts set `mustChangePassword` to false, so the README passwords below are not forced through that screen. Only logins created from admin create are.
 
 The session cookie `npc_portal_session` is httpOnly and HMAC-SHA256 signed (same Web Crypto approach as the preview cookie). It is a **browser session cookie** (no `Max-Age`), so it is dropped when the browser process closes. The signed payload also expires after **12 hours**, and **Log out** clears it immediately. Signing secret: `PORTAL_SESSION_SECRET`, then `ADMIN_ACCESS_KEY`, then `CAMPAIGNS_PREVIEW_KEY`. Local dev with none of those set uses a built-in dev secret.
 
@@ -100,7 +105,7 @@ Seed data includes two live campaigns (`/campaigns/maya-season-fund`, `/campaign
 
 | Real | Stubbed |
 | --- | --- |
-| Campaign CRUD, publish, QR, public pages, partner email/password login | Email delivery of new partner passwords (shown once in admin) |
+| Campaign CRUD, publish, QR, public pages, partner email/password login, temporary-password email via existing Gmail SMTP, forced password change on first sign-in | Password email when `GMAIL_USER` or `GMAIL_APP_PASSWORD` is missing (create still succeeds and shows the passwords) |
 | Durable sales ledger (local JSON, `data/campaigns-store.json`) | Stripe checkout unless `NEXT_PUBLIC_STORE_LIVE=true` and `STRIPE_SECRET_KEY` are set |
 | Per-org bag share (set on create) | Books UI — events export + optional webhook only |
 | Biweekly payout compute / mark paid | Remote Supabase tables (SQL is in `supabase/campaigns.sql`) |

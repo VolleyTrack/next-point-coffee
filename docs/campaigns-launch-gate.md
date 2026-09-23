@@ -33,6 +33,6 @@ Change `NEXT_PUBLIC_CAMPAIGNS_LIVE` to `true` and redeploy. Nav/footer "Start a 
 2. Public sees coming soon → fundraising waitlist / contact (no role switcher)
 3. Click **Team preview access** → enter `ADMIN_ACCESS_KEY`
 4. Cookie unlocks campaigns in that browser (14 days). **Lock preview** clears it.
-5. Partner pages (`/campaigns/portal`, `/campaigns/club`, `/campaigns/athlete`, `/campaigns/admin`) still ask for an email and password. Preview unlock is not a partner login. Buyer links (`/campaigns/[slug]`, checkout thanks) stay open after unlock.
+5. Partner pages (`/campaigns/portal`, `/campaigns/club`, `/campaigns/athlete`, `/campaigns/admin`) still ask for an email and password. A temporary password is sent to `/campaigns/change-password` before those pages open. Preview unlock is not a partner login. Buyer links (`/campaigns/[slug]`, checkout thanks) stay open after unlock.
 
 Strangers without the key cannot use `/campaigns`, portal, slug pages, or campaigns APIs.

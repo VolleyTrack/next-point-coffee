@@ -1,6 +1,15 @@
 import type { PortalRole } from "./types";
 
-const PARTNER_PREFIXES = ["/campaigns/portal", "/campaigns/club", "/campaigns/athlete", "/campaigns/admin"] as const;
+/** First-sign-in screen. Session required; portal dashboards stay closed until the password changes. */
+export const CHANGE_PASSWORD_PATH = "/campaigns/change-password";
+
+const PARTNER_PREFIXES = [
+  "/campaigns/portal",
+  "/campaigns/club",
+  "/campaigns/athlete",
+  "/campaigns/admin",
+  CHANGE_PASSWORD_PATH,
+] as const;
 
 /** Club, athlete, and Next Point Coffee admin pages. Buyer share links are not included. */
 export function isPartnerPortalPath(pathname: string): boolean {
@@ -40,4 +49,13 @@ export function loginDestination(next: string | undefined | null, role: PortalRo
   const safe = sanitizePortalNext(next, role);
   if (!safe || safe === "/campaigns/portal") return portalHome(role);
   return safe;
+}
+
+/** Temporary passwords land on the change screen. Everyone else goes to their dashboard. */
+export function postLoginPath(
+  user: { role: PortalRole; mustChangePassword?: boolean },
+  next?: string | null
+): string {
+  if (user.mustChangePassword) return CHANGE_PASSWORD_PATH;
+  return loginDestination(next, user.role);
 }

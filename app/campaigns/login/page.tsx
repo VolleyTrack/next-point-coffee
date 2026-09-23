@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getPortalUser } from "@/lib/campaigns/auth";
 import { LoginForm } from "@/components/campaigns/login-form";
-import { portalHome, sanitizePortalNext } from "@/lib/campaigns/portal-paths";
+import { CHANGE_PASSWORD_PATH, portalHome, sanitizePortalNext } from "@/lib/campaigns/portal-paths";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +13,7 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const user = await getPortalUser();
+  if (user?.mustChangePassword) redirect(CHANGE_PASSWORD_PATH);
   const next = sanitizePortalNext(params.next, user?.role);
   if (user) redirect(next ?? portalHome(user.role));
 
@@ -21,7 +22,8 @@ export default async function LoginPage({
       <p className="text-xs font-semibold uppercase tracking-widest-plus text-gold">Next Point Coffee Co.</p>
       <h1 className="mt-2 text-4xl font-black text-np-cream">Partner sign in</h1>
       <p className="mt-4 text-sm text-muted-foreground">
-        Clubs and athletes use the email and password Next Point Coffee shared when the campaign was created.
+        Clubs and athletes use the email and temporary password from Next Point Coffee. The first sign-in asks
+        you to choose your own password.
       </p>
       <LoginForm nextPath={sanitizePortalNext(params.next) ?? undefined} />
       <p className="mt-6 text-sm text-muted-foreground">

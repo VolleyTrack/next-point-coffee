@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { verifyPassword, hashPassword, generateTemporaryPassword } from "./passwords.ts";
-import { isPartnerPortalPath, loginDestination, sanitizePortalNext } from "./portal-paths.ts";
+import { CHANGE_PASSWORD_PATH, isPartnerPortalPath, loginDestination, postLoginPath, sanitizePortalNext } from "./portal-paths.ts";
 import {
   PORTAL_SESSION_TTL_SECONDS,
   createPortalSessionToken,
@@ -24,6 +24,7 @@ test("partner routes are gated and buyer links are not", () => {
   assert.equal(isPartnerPortalPath("/campaigns/club/extra"), true);
   assert.equal(isPartnerPortalPath("/campaigns/athlete"), true);
   assert.equal(isPartnerPortalPath("/campaigns/admin"), true);
+  assert.equal(isPartnerPortalPath(CHANGE_PASSWORD_PATH), true);
   assert.equal(isPartnerPortalPath("/campaigns"), false);
   assert.equal(isPartnerPortalPath("/campaigns/login"), false);
   assert.equal(isPartnerPortalPath("/campaigns/thanks"), false);
@@ -39,6 +40,10 @@ test("partner routes are gated and buyer links are not", () => {
   assert.equal(loginDestination("/campaigns/portal", "admin"), "/campaigns/admin");
   assert.equal(loginDestination("/campaigns/admin", "admin"), "/campaigns/admin");
   assert.equal(loginDestination("/campaigns/admin", "athlete"), "/campaigns/athlete");
+  assert.equal(loginDestination(CHANGE_PASSWORD_PATH, "club"), "/campaigns/club");
+  assert.equal(postLoginPath({ role: "club", mustChangePassword: true }, "/campaigns/club"), CHANGE_PASSWORD_PATH);
+  assert.equal(postLoginPath({ role: "athlete" }, "/campaigns/portal"), "/campaigns/athlete");
+  assert.equal(postLoginPath({ role: "admin", mustChangePassword: false }, "/campaigns/admin"), "/campaigns/admin");
 });
 
 test("session token is signed, expires, and rejects tampering", async () => {

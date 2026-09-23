@@ -1,5 +1,12 @@
 import nodemailer from "nodemailer";
 import { signupListAttachment } from "@/lib/signups-csv";
+import {
+  buildPartnerLoginEmail,
+  partnerLoginsToEmail,
+  summarizePartnerEmailDelivery,
+  type PartnerEmailSendResult,
+} from "@/lib/campaigns/login-email";
+import type { IssuedPortalCredential } from "@/lib/campaigns/types";
 
 type Transporter = ReturnType<typeof nodemailer.createTransport>;
 
@@ -139,6 +146,75 @@ export async function notifyCampaignRequest(input: {
   } catch (err) {
     console.error("Failed to send campaign request notification:", err);
   }
+}
+
+/**
+ * Email club and athlete temporary passwords from the Gmail account in GMAIL_USER
+ * (ryan@nextpointcoffee.com in production). Admin passwords are never included.
+ * Returns a warning string when nothing could be delivered. Does not throw.
+ */
+export async function emailPartnerTemporaryPasswords(
+  credentials: IssuedPortalCredential[],
+  context?: { organizationName?: string; campaignName?: string }
+): Promise<string | null> {
+  const recipients = partnerLoginsToEmail(credentials);
+  if (recipients.length === 0) return null;
+
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  if (!user || !pass) {
+    console.warn("Partner login email skipped: GMAIL_USER or GMAIL_APP_PASSWORD is not set.");
+    return summarizePartnerEmailDelivery(
+      recipients.map((row) => ({
+        email: row.email,
+        role: row.role,
+        sent: false,
+        reason: "unconfigured",
+      }))
+    );
+  }
+
+  const t = getTransporter();
+  if (!t) {
+    return summarizePartnerEmailDelivery(
+      recipients.map((row) => ({
+        email: row.email,
+        role: row.role,
+        sent: false,
+        reason: "unconfigured",
+      }))
+    );
+  }
+
+  const results: PartnerEmailSendResult[] = await Promise.all(
+    recipients.map(async (row) => {
+      const message = buildPartnerLoginEmail({
+        role: row.role,
+        name: row.name,
+        email: row.email,
+        temporaryPassword: row.temporaryPassword,
+        organizationName: context?.organizationName,
+        campaignName: context?.campaignName,
+      });
+      try {
+        await t.sendMail({
+          from: `"Next Point Coffee" <${user}>`,
+          to: row.email,
+          replyTo: user,
+          subject: message.subject,
+          text: message.text,
+          html: message.html,
+        });
+        return { email: row.email, role: row.role, sent: true };
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : "Unknown mail error";
+        console.error("Failed to send partner login email:", detail);
+        return { email: row.email, role: row.role, sent: false, reason: "failed" };
+      }
+    })
+  );
+
+  return summarizePartnerEmailDelivery(results);
 }
 
 export async function notifyContactForm(name: string, email: string, message: string): Promise<void> {

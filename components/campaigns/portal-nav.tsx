@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PortalLogoutButton } from "./portal-logout";
+import { CHANGE_PASSWORD_PATH } from "@/lib/campaigns/portal-paths";
 import type { PublicPortalUser } from "@/lib/campaigns/types";
 import { cn } from "@/lib/utils";
 
@@ -10,15 +11,20 @@ function roleLabel(role: PublicPortalUser["role"]): string {
 }
 
 export function PortalNav({ user }: { user: PublicPortalUser | null }) {
-  const links = [
-    { href: "/campaigns", label: "Start a campaign" },
-    user
-      ? { href: "/campaigns/portal", label: "Portal" }
-      : { href: "/campaigns/login", label: "Partner login" },
-    ...(user?.role === "admin" ? [{ href: "/campaigns/admin", label: "Admin" }] : []),
-    ...(user?.role === "club" ? [{ href: "/campaigns/club", label: "Club" }] : []),
-    ...(user?.role === "athlete" ? [{ href: "/campaigns/athlete", label: "Athlete" }] : []),
-  ];
+  const links = user?.mustChangePassword
+    ? [
+        { href: "/campaigns", label: "Start a campaign" },
+        { href: CHANGE_PASSWORD_PATH, label: "Set password" },
+      ]
+    : [
+        { href: "/campaigns", label: "Start a campaign" },
+        user
+          ? { href: "/campaigns/portal", label: "Portal" }
+          : { href: "/campaigns/login", label: "Partner login" },
+        ...(user?.role === "admin" ? [{ href: "/campaigns/admin", label: "Admin" }] : []),
+        ...(user?.role === "club" ? [{ href: "/campaigns/club", label: "Club" }] : []),
+        ...(user?.role === "athlete" ? [{ href: "/campaigns/athlete", label: "Athlete" }] : []),
+      ];
   const linkClass = "text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:text-gold";
 
   return (
@@ -31,7 +37,7 @@ export function PortalNav({ user }: { user: PublicPortalUser | null }) {
               {link.label}
             </Link>
           ))}
-          {user?.role === "admin" && (
+          {user?.role === "admin" && !user.mustChangePassword && (
             <a href="/admin/books" className={linkClass}>
               Books
             </a>
