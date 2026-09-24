@@ -1,5 +1,5 @@
 import { attachRetailForm } from "@/lib/retail-checkout";
-import { grindLabel, isGrindId, type GrindId } from "@/lib/site";
+import { grindLabel, isGrindId, retailMaxQuantity, type GrindId } from "@/lib/site";
 
 /**
  * Paid-order ingest for VolleyTrack/nextpoint-books (CPA sales).
@@ -306,7 +306,7 @@ function booksItemsFromLineItems(lineItems: unknown): BooksOrderItem[] | undefin
       product_name,
       grind: row.grind,
       form,
-      quantity: Number.isFinite(quantity) && quantity >= 1 ? Math.min(20, Math.floor(quantity)) : 1,
+      quantity: Number.isFinite(quantity) && quantity >= 1 ? Math.min(retailMaxQuantity, Math.floor(quantity)) : 1,
     });
   }
   return items.length > 0 ? items : undefined;

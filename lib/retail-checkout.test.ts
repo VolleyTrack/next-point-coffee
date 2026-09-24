@@ -31,6 +31,11 @@ test("launch cart accepts First Serve and Second Wind in both forms", () => {
   assert.match(stripe.price_data.product_data.description, /^Whole bean\. Dark Roast\./);
   assert.equal(stripe.price_data.unit_amount, 2000);
   assert.equal(stripe.quantity, 3);
+  assert.deepEqual(stripe.adjustable_quantity, {
+    enabled: true,
+    minimum: 1,
+    maximum: 99,
+  });
 });
 
 test("retail checkout sessions accept a promotion code", () => {
@@ -41,6 +46,11 @@ test("retail checkout sessions accept a promotion code", () => {
   const params = retailCheckoutSessionParams(cart.lines, "https://nextpointcoffee.com");
   assert.equal(params.mode, "payment");
   assert.equal(params.allow_promotion_codes, true);
+  assert.deepEqual(params.line_items?.[0].adjustable_quantity, {
+    enabled: true,
+    minimum: 1,
+    maximum: 99,
+  });
   assert.equal(params.discounts, undefined);
   assert.equal(params.success_url, "https://nextpointcoffee.com/order-confirmed?session_id={CHECKOUT_SESSION_ID}");
   assert.equal(params.cancel_url, "https://nextpointcoffee.com/shop");
@@ -66,11 +76,16 @@ test("retail checkout rejects Half Caff and a missing grind", () => {
   assert.equal(unknown.ok, false);
 });
 
-test("quantity stays inside the existing retail range", () => {
-  const cart = resolveRetailCart([{ slug: "first-serve", grind: "ground", quantity: 99 }]);
-  assert.equal(cart.ok, true);
-  if (!cart.ok) return;
-  assert.equal(cart.lines[0].quantity, 20);
+test("quantity stays inside the shared retail maximum", () => {
+  const over = resolveRetailCart([{ slug: "first-serve", grind: "ground", quantity: 500 }]);
+  assert.equal(over.ok, true);
+  if (!over.ok) return;
+  assert.equal(over.lines[0].quantity, 99);
+
+  const atCap = resolveRetailCart([{ slug: "first-serve", grind: "ground", quantity: 99 }]);
+  assert.equal(atCap.ok, true);
+  if (!atCap.ok) return;
+  assert.equal(atCap.lines[0].quantity, 99);
 });
 
 test("a single bag puts grind on session metadata", () => {

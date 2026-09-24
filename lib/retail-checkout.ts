@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import {
+  clampRetailQuantity,
   grindLabel,
   isGrindId,
   products,
@@ -86,12 +87,18 @@ export function toStripeLineItem(line: ResolvedRetailLine) {
       unit_amount: line.priceCents,
     },
     quantity: line.quantity,
+    adjustable_quantity: {
+      enabled: true,
+      minimum: 1,
+      maximum: retailMaxQuantity,
+    },
   };
 }
 
 /**
  * Retail Checkout Session for the shop. Customers can enter a launch promotion
- * code. Shipping stays inside the bag price; this only collects a US address.
+ * code and change the bag count up to retailMaxQuantity. Shipping stays inside
+ * the bag price; this only collects a US address.
  */
 export function retailCheckoutSessionParams(
   lines: ResolvedRetailLine[],
@@ -242,5 +249,5 @@ function stringValue(value: unknown): string {
 
 function clampQuantity(value: unknown): number {
   const parsed = typeof value === "number" ? value : Number(value);
-  return Math.max(1, Math.min(retailMaxQuantity, Math.floor(parsed) || 1));
+  return clampRetailQuantity(parsed);
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { grindOptions, retailMaxQuantity, type GrindId } from "@/lib/site";
+import { clampRetailQuantity, grindOptions, retailMaxQuantity, type GrindId } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { Loader2, Minus, Plus } from "lucide-react";
 
@@ -25,8 +25,7 @@ export function BuyButton({ slug, priceCents }: BuyButtonProps) {
   const grindLegendId = `grind-${slug}`;
 
   function setClamped(next: number) {
-    const value = Math.max(1, Math.min(retailMaxQuantity, Math.floor(next) || 1));
-    setQuantity(value);
+    setQuantity(clampRetailQuantity(next));
   }
 
   async function handleBuy() {
