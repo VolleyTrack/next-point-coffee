@@ -57,10 +57,11 @@ X-NPC-Contract-Version: 1
 | `stripe_session_id` | Idempotency key. Replays must not create a second sale. |
 | `order_id` | `public.orders.id` |
 | `campaign_share_owed` | Cents owed to the org (`bag share × quantity`). Null for retail and when the bag share could not be resolved. `0` means the split applies and the share is zero. Shipping is not included. |
+| `items` | Optional. Present on retail checkouts that captured grind/form. Each entry has `product_slug`, `product_name`, `grind` (`ground` or `whole-bean`), `form` (`Ground` or `Whole bean`), and `quantity`. Omitted for campaign checkouts and older retail orders. |
 
 Success is any HTTP 2xx. HTTP 409 means the session was already stored and is also success. This app retries network failures, HTTP 408, 429, and 5xx three times (250ms, then 1s) and then marks the order `failed`.
 
-Retail Checkout sets metadata `channel=retail`. Campaign Checkout sets `channel=campaign` plus `campaignId` and `campaignName`. A session with `campaignId` is always `campaign`.
+Retail Checkout sets metadata `channel=retail`, plus `grind` and `form` (`Ground` or `Whole bean`) on a single-bag session, and an `items` JSON list for every retail cart. The Stripe line item name is the coffee plus that form, for example `First Serve — Whole bean`. Campaign Checkout sets `channel=campaign` plus `campaignId` and `campaignName`. A session with `campaignId` is always `campaign`. Campaign orders do not send `items`.
 
 ### How to test
 

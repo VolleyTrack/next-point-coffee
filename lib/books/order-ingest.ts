@@ -1,3 +1,6 @@
+import { attachRetailForm } from "@/lib/retail-checkout";
+import { grindLabel, isGrindId, type GrindId } from "@/lib/site";
+
 /**
  * Paid-order ingest for VolleyTrack/nextpoint-books (CPA sales).
  *
@@ -43,6 +46,21 @@ export interface BooksOrderIngestBody {
    * Shipping is not part of this amount.
    */
   campaign_share_owed: number | null;
+  /**
+   * Retail bags when grind/form was captured. Omitted for campaign checkouts
+   * and for older retail orders that have no form.
+   */
+  items?: BooksOrderItem[];
+}
+
+export interface BooksOrderItem {
+  product_slug: string;
+  product_name: string;
+  /** Stable id: `ground` or `whole-bean`. */
+  grind: GrindId;
+  /** Customer label: Ground or Whole bean. */
+  form: string;
+  quantity: number;
 }
 
 export interface CheckoutOrderInput {
@@ -210,7 +228,7 @@ export function buildOrderInsert(input: CheckoutOrderInput, campaign: ResolvedCa
     customer_email: input.customer_email,
     customer_name: input.customer_name,
     shipping_address: input.shipping_address,
-    line_items: input.line_items,
+    line_items: attachRetailForm(input.line_items, input.metadata),
     amount_subtotal: input.amount_subtotal,
     amount_shipping: input.amount_shipping,
     amount_total: input.amount_total,
@@ -248,10 +266,12 @@ export function buildBooksOrderIngestBody(
     campaign_id: string | null;
     campaign_name: string | null;
     campaign_share_owed: number | null;
+    line_items?: unknown;
   },
   orderDate: string
 ): BooksOrderIngestBody {
   const campaign = order.channel === "campaign";
+  const items = booksItemsFromLineItems(order.line_items);
   return {
     source: BOOKS_ORDER_SOURCE,
     contract: BOOKS_ORDER_CONTRACT,
@@ -265,7 +285,31 @@ export function buildBooksOrderIngestBody(
     stripe_session_id: order.stripe_session_id,
     order_id: order.id,
     campaign_share_owed: campaign ? order.campaign_share_owed : null,
+    ...(items ? { items } : {}),
   };
+}
+
+function booksItemsFromLineItems(lineItems: unknown): BooksOrderItem[] | undefined {
+  if (!Array.isArray(lineItems)) return undefined;
+  const items: BooksOrderItem[] = [];
+  for (const item of lineItems) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as Record<string, unknown>;
+    if (!isGrindId(row.grind)) continue;
+    const product_slug = typeof row.product_slug === "string" ? row.product_slug.trim() : "";
+    const product_name = typeof row.product_name === "string" ? row.product_name.trim() : "";
+    if (!product_slug || !product_name) continue;
+    const quantity = Number(row.quantity);
+    const form = typeof row.form === "string" && row.form.trim() ? row.form.trim() : grindLabel(row.grind);
+    items.push({
+      product_slug,
+      product_name,
+      grind: row.grind,
+      form,
+      quantity: Number.isFinite(quantity) && quantity >= 1 ? Math.min(20, Math.floor(quantity)) : 1,
+    });
+  }
+  return items.length > 0 ? items : undefined;
 }
 
 export function booksIngestFailureAlert(
@@ -503,7 +547,7 @@ export interface SyncPaidOrderDeps extends IngestBooksOrderDeps {
  * A row already marked synced is not posted again. Books failures do not throw.
  */
 export async function syncPaidOrderToBooks(
-  order: PaidOrderRecord,
+  order: PaidOrderRecord & { line_items?: unknown },
   context: { orderDate: string },
   deps: SyncPaidOrderDeps
 ): Promise<BooksIngestResult> {
