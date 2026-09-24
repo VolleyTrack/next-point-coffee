@@ -1,3 +1,4 @@
+import type Stripe from "stripe";
 import {
   grindLabel,
   isGrindId,
@@ -85,6 +86,25 @@ export function toStripeLineItem(line: ResolvedRetailLine) {
       unit_amount: line.priceCents,
     },
     quantity: line.quantity,
+  };
+}
+
+/**
+ * Retail Checkout Session for the shop. Customers can enter a launch promotion
+ * code. Shipping stays inside the bag price; this only collects a US address.
+ */
+export function retailCheckoutSessionParams(
+  lines: ResolvedRetailLine[],
+  origin: string
+): Stripe.Checkout.SessionCreateParams {
+  return {
+    mode: "payment",
+    line_items: lines.map(toStripeLineItem),
+    allow_promotion_codes: true,
+    shipping_address_collection: { allowed_countries: ["US"] },
+    success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/shop`,
+    metadata: retailCheckoutMetadata(lines),
   };
 }
 
