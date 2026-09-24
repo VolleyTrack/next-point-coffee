@@ -25,7 +25,7 @@ export default function AboutPage() {
           <h2 className="mt-2 text-xl font-black text-np-cream">First Serve &amp; Second Wind</h2>
           <p className="mt-3 text-sm text-muted-foreground">
             First Serve is the medium that starts the day - brown sugar, toasted almond, light citrus. Second Wind is
-            the dark roast for the comeback. Half Caff comes after that.
+            a lively dark roast with notes of sweet chocolate and stone fruit. Half Caff comes after that.
           </p>
         </div>
         <div className="rounded-lg border border-gold/20 p-6">
