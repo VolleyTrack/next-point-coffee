@@ -5,6 +5,7 @@ import {
   attachRetailForm,
   resolveRetailCart,
   retailCheckoutMetadata,
+  retailCheckoutSessionParams,
   toStripeLineItem,
 } from "./retail-checkout.ts";
 
@@ -30,6 +31,26 @@ test("launch cart accepts First Serve and Second Wind in both forms", () => {
   assert.match(stripe.price_data.product_data.description, /^Whole bean\. Dark Roast\./);
   assert.equal(stripe.price_data.unit_amount, 2000);
   assert.equal(stripe.quantity, 3);
+});
+
+test("retail checkout sessions accept a promotion code", () => {
+  const cart = resolveRetailCart([{ slug: "first-serve", grind: "whole-bean", quantity: 2 }]);
+  assert.equal(cart.ok, true);
+  if (!cart.ok) return;
+
+  const params = retailCheckoutSessionParams(cart.lines, "https://nextpointcoffee.com");
+  assert.equal(params.mode, "payment");
+  assert.equal(params.allow_promotion_codes, true);
+  assert.equal(params.discounts, undefined);
+  assert.equal(params.success_url, "https://nextpointcoffee.com/order-confirmed?session_id={CHECKOUT_SESSION_ID}");
+  assert.equal(params.cancel_url, "https://nextpointcoffee.com/shop");
+  assert.deepEqual(params.shipping_address_collection, { allowed_countries: ["US"] });
+  assert.equal(params.shipping_options, undefined);
+  assert.equal(params.metadata?.channel, "retail");
+  assert.equal(params.metadata?.grind, "whole-bean");
+  assert.equal(params.line_items?.length, 1);
+  assert.equal(params.line_items?.[0].quantity, 2);
+  assert.equal(params.line_items?.[0].price_data?.unit_amount, 2000);
 });
 
 test("retail checkout rejects Half Caff and a missing grind", () => {

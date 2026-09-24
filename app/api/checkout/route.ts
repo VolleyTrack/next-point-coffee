@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { retailCheckoutMetadata, resolveRetailCart, toStripeLineItem } from "@/lib/retail-checkout";
+import { retailCheckoutSessionParams, resolveRetailCart } from "@/lib/retail-checkout";
 import { getStripe } from "@/lib/stripe";
 import { storeLive } from "@/lib/site";
 
@@ -23,21 +23,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: cart.error }, { status: cart.status });
   }
 
-  const line_items = cart.lines.map(toStripeLineItem);
-
   try {
     const stripe = getStripe();
     const origin = request.headers.get("origin") || `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
 
     // Shipping is included in product.priceCents. Collect an address for fulfillment only.
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items,
-      shipping_address_collection: { allowed_countries: ["US"] },
-      success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/shop`,
-      metadata: retailCheckoutMetadata(cart.lines),
-    });
+    const session = await stripe.checkout.sessions.create(
+      retailCheckoutSessionParams(cart.lines, origin)
+    );
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
