@@ -27,8 +27,18 @@ export const campaignsLive = process.env.NEXT_PUBLIC_CAMPAIGNS_LIVE === "true";
 // Fundraiser campaign checkout still adds it as its own Stripe shipping option.
 export const flatShippingCents = 650;
 
-/** Max bags on one retail checkout line. /api/checkout clamps to this range. */
-export const retailMaxQuantity = 20;
+/**
+ * Max bags on one retail order. The shop quantity picker, /api/checkout, and
+ * Stripe Checkout `adjustable_quantity.maximum` all use this value. 99 matches
+ * Stripe's default adjustable-quantity ceiling (the API allows up to 999999).
+ * Fundraiser campaign checkout keeps its own cap.
+ */
+export const retailMaxQuantity = 99;
+
+/** Whole bags in [1, retailMaxQuantity]. Non-numeric input becomes 1. */
+export function clampRetailQuantity(quantity: number): number {
+  return Math.max(1, Math.min(retailMaxQuantity, Math.floor(quantity) || 1));
+}
 
 /**
  * Launch forms for each buyable coffee. Customer labels are Ground and Whole bean.
