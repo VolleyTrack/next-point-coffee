@@ -6,6 +6,7 @@ import { checkoutCustomerFromSession } from "@/lib/checkout-customer";
 import { markOrderPaymentIncomplete } from "@/lib/orders";
 import { sendOrderConfirmation } from "@/lib/send-order-confirmation";
 import { getStripe } from "@/lib/stripe";
+import { paidRetailPaymentSummary } from "@/lib/stripe-order-summary";
 import type Stripe from "stripe";
 
 export async function POST(request: Request) {
@@ -58,6 +59,7 @@ async function handlePaidCheckout(session: Stripe.Checkout.Session) {
     const input = checkoutInputFromStripe(fullSession);
     const campaign = await resolveCampaign(input.metadata);
     const saved = await recordPaidCheckout(input, campaign);
+    await refreshPaymentSummary(stripe, fullSession);
 
     const campaignId = input.metadata?.campaignId;
     const productSlug = input.metadata?.productSlug;
@@ -92,6 +94,25 @@ async function handlePaidCheckout(session: Stripe.Checkout.Session) {
       stripe_session_id: session.id,
       error: message,
     });
+  }
+}
+
+/**
+ * Rewrite the Stripe payment description with the final bag counts
+ * ("2 × First Serve — Whole bean"). Shoppers can change quantity on the
+ * Stripe page, so the description set at session creation can be stale.
+ * Best effort: a failure here never affects the order.
+ */
+async function refreshPaymentSummary(stripe: Stripe, session: Stripe.Checkout.Session) {
+  const update = paidRetailPaymentSummary(session);
+  if (!update) return;
+  try {
+    await stripe.paymentIntents.update(update.paymentIntentId, {
+      description: update.description,
+      metadata: update.metadata,
+    });
+  } catch (err) {
+    console.error("Could not update the Stripe payment description:", err instanceof Error ? err.message : err);
   }
 }
 

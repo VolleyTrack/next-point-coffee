@@ -188,3 +188,48 @@ test("stored line items and books ingest keep grind and form", () => {
     },
   ]);
 });
+
+test("Stripe payment shows a readable order summary", async () => {
+  const { orderSummaryText, paidRetailPaymentSummary } = await import("./stripe-order-summary.ts");
+  const cart = resolveRetailCart([
+    { slug: "first-serve", grind: "whole-bean", quantity: 1 },
+    { slug: "second-wind", grind: "ground", quantity: 2 },
+  ]);
+  assert.equal(cart.ok, true);
+  if (!cart.ok) return;
+
+  const params = retailCheckoutSessionParams(cart.lines, "https://nextpointcoffee.com");
+  const summary = "1 × First Serve — Whole bean, 2 × Second Wind — Ground";
+  assert.equal(params.payment_intent_data?.description, summary);
+  assert.equal(params.payment_intent_data?.metadata?.items_summary, summary);
+  assert.equal(params.payment_intent_data?.metadata?.channel, "retail");
+  assert.equal(params.metadata?.items_summary, summary);
+
+  const long = orderSummaryText(
+    Array.from({ length: 80 }, (_, i) => ({ quantity: i + 1, title: "Second Wind — Whole bean" })),
+    500
+  );
+  assert.ok(long.length <= 500);
+  assert.ok(long.endsWith("…"));
+  assert.match(long, /^1 × Second Wind — Whole bean, 2 × /);
+
+  const paid = paidRetailPaymentSummary({
+    payment_intent: "pi_123",
+    metadata: { channel: "retail" },
+    line_items: { data: [{ description: "First Serve — Whole bean", quantity: 3 }] },
+  });
+  assert.deepEqual(paid, {
+    paymentIntentId: "pi_123",
+    description: "3 × First Serve — Whole bean",
+    metadata: { items_summary: "3 × First Serve — Whole bean" },
+  });
+  assert.equal(
+    paidRetailPaymentSummary({
+      payment_intent: "pi_123",
+      metadata: { channel: "campaign", campaignId: "cmp-1" },
+      line_items: { data: [{ description: "Bag", quantity: 1 }] },
+    }),
+    null
+  );
+  assert.equal(paidRetailPaymentSummary({ payment_intent: null, metadata: { channel: "retail" } }), null);
+});
