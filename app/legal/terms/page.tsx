@@ -5,8 +5,8 @@ export default function TermsPage() {
       <h1 className="mt-2 text-4xl font-black text-np-cream">Terms of Service</h1>
       <div className="mt-8 space-y-6 text-sm leading-relaxed">
         <p>
-          Welcome to Next Point Coffee Co. ("Next Point," "we," "us," or "our"). By accessing or
-          purchasing from nextpointcoffee.com (the "Site"), you agree to these Terms of Service.
+          Welcome to Next Point Coffee Co. (&quot;Next Point,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). By accessing or
+          purchasing from nextpointcoffee.com (the &quot;Site&quot;), you agree to these Terms of Service.
         </p>
         <h2 className="text-lg font-bold text-np-cream">Products and Pricing</h2>
         <p>

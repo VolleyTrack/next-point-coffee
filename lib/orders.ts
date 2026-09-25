@@ -25,6 +25,8 @@ export interface OrderRow {
   books_sync_status: OrderBooksSyncStatus;
   books_last_error: string | null;
   books_synced_at: string | null;
+  /** Null until the pre-order confirmation email is sent. */
+  confirmation_email_sent_at?: string | null;
   created_at: string;
 }
 
@@ -106,6 +108,28 @@ export async function listOrders(): Promise<OrderRow[]> {
   return res.json();
 }
 
+export async function getOrderById(orderId: string): Promise<OrderRow | null> {
+  assertConfigured();
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}&select=*`,
+    {
+      headers: headers(),
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Supabase order fetch failed: ${res.status} ${text}`);
+  }
+  const rows = (await res.json()) as OrderRow[];
+  return rows[0] ?? null;
+}
+
+/** Set after a successful confirmation email. Not part of the checkout upsert. */
+export async function markConfirmationEmailSent(orderId: string, sentAt: string): Promise<void> {
+  await patchOrderBy("id", orderId, { confirmation_email_sent_at: sentAt });
+}
+
 export async function getOrderBySessionId(sessionId: string): Promise<OrderRow | null> {
   assertConfigured();
   const res = await fetch(
@@ -142,9 +166,17 @@ export async function markOrderPaymentIncomplete(sessionId: string, paymentStatu
 }
 
 async function patchOrder(sessionId: string, patch: Record<string, unknown>): Promise<void> {
+  await patchOrderBy("stripe_session_id", sessionId, patch);
+}
+
+async function patchOrderBy(
+  column: "id" | "stripe_session_id",
+  value: string,
+  patch: Record<string, unknown>
+): Promise<void> {
   assertConfigured();
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/orders?stripe_session_id=eq.${encodeURIComponent(sessionId)}`,
+    `${SUPABASE_URL}/rest/v1/orders?${column}=eq.${encodeURIComponent(value)}`,
     {
       method: "PATCH",
       headers: headers("return=minimal"),

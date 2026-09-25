@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { preorderCheckoutCustomText } from "@/lib/preorder";
 import { flatShippingCents, products, storeLive } from "@/lib/site";
 import { getStripe } from "@/lib/stripe";
 import { getCampaignBySlug, recordSale } from "@/lib/campaigns/store";
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
         },
       ],
       shipping_address_collection: { allowed_countries: ["US"] },
+      custom_text: preorderCheckoutCustomText(),
       shipping_options: [
         {
           shipping_rate_data: {

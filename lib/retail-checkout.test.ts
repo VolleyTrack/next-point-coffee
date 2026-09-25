@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildBooksOrderIngestBody, buildOrderInsert } from "./books/order-ingest.ts";
+import { preorderCheckoutMessage } from "./preorder.ts";
 import {
   attachRetailForm,
   resolveRetailCart,
@@ -55,6 +56,10 @@ test("retail checkout sessions accept a promotion code", () => {
   assert.equal(params.success_url, "https://nextpointcoffee.com/order-confirmed?session_id={CHECKOUT_SESSION_ID}");
   assert.equal(params.cancel_url, "https://nextpointcoffee.com/shop");
   assert.deepEqual(params.shipping_address_collection, { allowed_countries: ["US"] });
+  assert.equal(params.custom_text?.submit?.message, preorderCheckoutMessage());
+  assert.equal(params.custom_text?.after_submit?.message, preorderCheckoutMessage());
+  assert.ok((params.custom_text?.submit?.message?.length ?? 0) > 0);
+  assert.ok((params.custom_text?.submit?.message?.length ?? 0) <= 1200);
   assert.equal(params.shipping_options, undefined);
   assert.equal(params.metadata?.channel, "retail");
   assert.equal(params.metadata?.grind, "whole-bean");

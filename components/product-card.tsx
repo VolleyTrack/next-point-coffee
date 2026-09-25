@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { RoastDots } from "@/components/roast-dots";
 import { BuyButton } from "@/components/buy-button";
 import { WaitlistForm } from "@/components/waitlist-form";
+import { preorderCardLine } from "@/lib/preorder";
 import type { Product } from "@/lib/site";
 import { storeLive } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,10 @@ export function ProductCard({ product }: { product: Product }) {
           <RoastDots level={product.roastLevel} />
           <span className="text-xs text-muted-foreground">{product.netWeight}</span>
         </div>
+
+        {product.purchasable && storeLive ? (
+          <p className="text-sm font-semibold text-gold">{preorderCardLine()}</p>
+        ) : null}
 
         <div className="pt-2">
           {product.purchasable && storeLive ? (

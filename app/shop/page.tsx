@@ -1,4 +1,5 @@
 import { ProductCard } from "@/components/product-card";
+import { preorderCardLine } from "@/lib/preorder";
 import { products, storeLive } from "@/lib/site";
 
 export default function ShopPage() {
@@ -15,6 +16,9 @@ export default function ShopPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Bag prices include shipping within the United States.
         </p>
+        {storeLive ? (
+          <p className="mt-3 text-sm font-semibold text-gold">{preorderCardLine()}</p>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">

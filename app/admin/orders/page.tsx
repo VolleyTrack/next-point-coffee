@@ -27,6 +27,8 @@ export default function AdminOrdersPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
   const [retryNote, setRetryNote] = useState("");
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const [resendNote, setResendNote] = useState("");
 
   async function unlock() {
     setStatus("loading");
@@ -45,6 +47,29 @@ export default function AdminOrdersPage() {
     } catch {
       setError("Something went wrong loading orders.");
       setStatus("idle");
+    }
+  }
+
+  async function resendConfirmation(orderId: string) {
+    setResendingId(orderId);
+    setResendNote("");
+    setError("");
+    try {
+      const res = await fetch("/api/admin/orders/confirmation-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-key": key },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Could not send the confirmation email.");
+        return;
+      }
+      setResendNote(`Confirmation sent to ${data.to || "the customer"} (${orderId.slice(0, 8)}).`);
+    } catch {
+      setError("Could not send the confirmation email.");
+    } finally {
+      setResendingId(null);
     }
   }
 
@@ -121,6 +146,7 @@ export default function AdminOrdersPage() {
         </Button>
       </div>
       {retryNote && <p className="mb-4 text-sm text-muted-foreground">{retryNote}</p>}
+      {resendNote && <p className="mb-4 text-sm text-muted-foreground">{resendNote}</p>}
       {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
       <div className="overflow-x-auto rounded-lg border border-gold/20">
@@ -134,6 +160,7 @@ export default function AdminOrdersPage() {
               <th className="px-4 py-3">Books</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3">Confirmation</th>
             </tr>
           </thead>
           <tbody>
@@ -163,11 +190,23 @@ export default function AdminOrdersPage() {
                 <td className="px-4 py-3 text-muted-foreground">
                   {new Date(row.created_at).toLocaleString()}
                 </td>
+                <td className="px-4 py-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="border-gold/40 text-np-cream"
+                    disabled={resendingId === row.id}
+                    onClick={() => resendConfirmation(row.id)}
+                  >
+                    {resendingId === row.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resend confirmation"}
+                  </Button>
+                </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={8} className="px-4 py-6 text-center text-muted-foreground">
                   No orders yet.
                 </td>
               </tr>

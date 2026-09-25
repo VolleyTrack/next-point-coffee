@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import { preorderCheckoutCustomText } from "@/lib/preorder";
 import {
   clampRetailQuantity,
   grindLabel,
@@ -98,7 +99,8 @@ export function toStripeLineItem(line: ResolvedRetailLine) {
 /**
  * Retail Checkout Session for the shop. Customers can enter a launch promotion
  * code and change the bag count up to retailMaxQuantity. Shipping stays inside
- * the bag price; this only collects a US address.
+ * the bag price. Hosted Checkout collects the customer email. This collects a
+ * US shipping address and does not add a shipping rate.
  */
 export function retailCheckoutSessionParams(
   lines: ResolvedRetailLine[],
@@ -109,6 +111,7 @@ export function retailCheckoutSessionParams(
     line_items: lines.map(toStripeLineItem),
     allow_promotion_codes: true,
     shipping_address_collection: { allowed_countries: ["US"] },
+    custom_text: preorderCheckoutCustomText(),
     success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/shop`,
     metadata: retailCheckoutMetadata(lines),
