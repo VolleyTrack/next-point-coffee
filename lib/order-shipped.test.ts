@@ -67,7 +67,10 @@ test("email has items, ship-to, tracking link, logo and signature", () => {
   assert.match(message.text, /Tampa, FL 33601/);
   assert.match(message.html, /tools\.usps\.com\/go\/TrackConfirmAction\?tLabels=9400111/);
   assert.match(message.html, /brand\/next-point-logo\.png/);
-  assert.match(message.html, /Founder \| Next Point Coffee Co\./);
+  assert.match(message.html, /Ryan Mullen<br \/>\s*Next Point Coffee<br \/>/);
+  assert.doesNotMatch(message.html, /Founder/);
+  assert.match(message.text, /Ryan Mullen\nNext Point Coffee\n/);
+  assert.doesNotMatch(message.text, /Founder/);
 });
 
 test("ships and emails once", async () => {
