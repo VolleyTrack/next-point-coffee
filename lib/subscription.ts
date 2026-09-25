@@ -253,6 +253,27 @@ export function subscriptionDeliveryMetadata(
   return { ...retail, ...subscriptionPlanMetadata(selection), sub_cycle: String(Math.max(0, Math.floor(cycleIndex))) };
 }
 
+/**
+ * One line for the internal order alert, from order metadata (first checkout or
+ * renewal), e.g. "Every 4 weeks · Alternate both (this delivery: Second Wind) ·
+ * delivery 2". Bag counts come from the order's line items (the billed quantity).
+ * Null when the order is not a subscription.
+ */
+export function subscriptionAlertLabel(metadata: Record<string, string> | null | undefined): string | null {
+  const selection = selectionFromPlanMetadata(metadata);
+  if (!selection) return null;
+  const cycle = Math.max(0, Math.floor(Number(metadata?.sub_cycle) || 0));
+  const coffee =
+    selection.coffee === "alternate"
+      ? `${coffeeLabel("alternate")} (this delivery: ${coffeeLabel(deliverySlug("alternate", cycle))})`
+      : coffeeLabel(selection.coffee);
+  return [
+    frequencyLabel(selection.frequency),
+    coffee,
+    `delivery ${cycle + 1}`,
+  ].join(" · ");
+}
+
 export function subscriptionCheckoutMessage(selection: SubscriptionSelection, env: NodeJS.ProcessEnv = process.env): string {
   const message = `Subscription: your first delivery is roasted, packaged, and ships ${preorderShipDateLabel(
     env

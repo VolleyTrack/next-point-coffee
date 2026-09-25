@@ -229,3 +229,77 @@ test("shop cards offer the subscription for single coffees, default every 4 week
   assert.deepEqual(frequencyOptions.map((option) => option.weeks), [2, 4, 6]);
   assert.ok(coffeeChoices.some((choice) => choice.id === "alternate"));
 });
+
+test("internal order alert covers subscription checkouts and renewals with frequency", async () => {
+  const { renewalOrderInput, subscriptionAlertLabel, subscriptionCheckoutSessionParams } = await import("./subscription.ts");
+  const { buildOrderInsert } = await import("./books/order-ingest.ts");
+  const { buildOrderAlertEmail, orderAlertSkipReason } = await import("./order-alert.ts");
+  const env = { ORDER_ALERT_EMAIL: "" } as NodeJS.ProcessEnv;
+  const row = (insert: ReturnType<typeof buildOrderInsert>, id: string) => ({ ...insert, id, created_at: "2026-10-22T15:00:00.000Z" });
+
+  assert.equal(subscriptionAlertLabel({ channel: "retail", productSlug: "first-serve" }), null);
+  assert.equal(subscriptionAlertLabel(null), null);
+
+  // Renewal: alternate plan, second delivery (Second Wind), 120 bags billed.
+  const renewal = renewalOrderInput(
+    {
+      id: "in_alert",
+      created: 1_791_000_000,
+      subtotal: 232200,
+      amount_paid: 232200,
+      currency: "usd",
+      customer_email: "sub@example.com",
+      customer_name: "Sub Scriber",
+      customer_shipping: { name: "Sub Scriber", address: { line1: "1 Court St", city: "Athens", state: "GA", postal_code: "30601", country: "US" } },
+      quantity: 120,
+    },
+    { coffee: "alternate", grind: "whole-bean", bags: 2, frequency: "2wk" },
+    1
+  );
+  const renewalLabel = subscriptionAlertLabel(renewal.metadata);
+  assert.equal(renewalLabel, "Every 2 weeks · Alternate both (this delivery: Second Wind) · delivery 2");
+  const renewalOrder = row(buildOrderInsert(renewal, null), "11111111-2222-4333-8444-555555555555");
+  const renewalMail = buildOrderAlertEmail(
+    renewalOrder,
+    { kind: "renewal", wasPaidBefore: null, placedAt: renewal.created, subscription: renewalLabel },
+    env
+  );
+  assert.match(renewalMail.subject, /^New subscription renewal: 120x Second Wind \(Whole Bean\) - \$2,322\.00 - Sub Scriber$/);
+  assert.match(renewalMail.text, /- 120 x Second Wind \(Whole Bean\) @ \$19\.35 = \$2,322\.00/);
+  assert.match(renewalMail.text, /Subscription: Every 2 weeks · Alternate both \(this delivery: Second Wind\) · delivery 2/);
+  assert.match(renewalMail.text, /Stripe invoice: in_alert/);
+  assert.match(renewalMail.html, /Subscription<\/td>/);
+  assert.match(renewalMail.html, /Every 2 weeks/);
+  assert.equal(orderAlertSkipReason(renewalOrder, { kind: "renewal", wasPaidBefore: true }), "already_paid");
+  assert.equal(orderAlertSkipReason(renewalOrder, { kind: "renewal", wasPaidBefore: false }), null);
+
+  // First subscription checkout: Stripe line item names the subscription product.
+  const params = subscriptionCheckoutSessionParams(
+    { coffee: "first-serve", grind: "ground", bags: 3, frequency: "4wk" },
+    "https://example.com",
+    { PREORDER_SHIP_DATE: "2026-10-08" } as NodeJS.ProcessEnv
+  );
+  const metadata = params.metadata as Record<string, string>;
+  const firstLabel = subscriptionAlertLabel(metadata);
+  assert.equal(firstLabel, "Every 4 weeks · First Serve · delivery 1");
+  const first = buildOrderInsert(
+    {
+      id: "cs_test_sub",
+      created: 1_790_000_000,
+      amount_subtotal: 5805,
+      amount_shipping: 0,
+      amount_total: 5805,
+      currency: "usd",
+      payment_status: "paid",
+      customer_email: "new@example.com",
+      customer_name: "New Sub",
+      shipping_address: null,
+      line_items: [{ description: "First Serve Subscription — Ground", quantity: 3, amount_subtotal: 5805, amount_total: 5805 }],
+      metadata,
+    },
+    null
+  );
+  const firstMail = buildOrderAlertEmail(row(first, "66666666-7777-4888-9999-000000000000"), { subscription: firstLabel }, env);
+  assert.match(firstMail.subject, /^New subscription: 3x First Serve \(Ground\) - \$58\.05 - New Sub$/);
+  assert.match(firstMail.text, /Subscription: Every 4 weeks · First Serve · delivery 1/);
+});
