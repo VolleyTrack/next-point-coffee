@@ -8,6 +8,7 @@ import { CheckCircle, Loader2 } from "lucide-react";
 export function OrderConfirmedContent({ shipLine }: { shipLine: string }) {
   const params = useSearchParams();
   const sessionId = params.get("session_id");
+  const subscription = params.get("type") === "subscription";
   const [status, setStatus] = useState<"loading" | "found" | "not_found">("loading");
 
   useEffect(() => {
@@ -26,10 +27,12 @@ export function OrderConfirmedContent({ shipLine }: { shipLine: string }) {
         <>
           <CheckCircle className="h-12 w-12 text-gold" />
           <h1 className="mt-4 text-3xl font-black text-np-cream">Thank you</h1>
-          <p className="mt-3 text-muted-foreground">Thank you for your pre-order.</p>
+          <p className="mt-3 text-muted-foreground">
+            {subscription ? "Thank you for subscribing. Welcome to the team." : "Thank you for your pre-order."}
+          </p>
           <p className="mt-3 text-sm font-semibold text-gold">{shipLine}</p>
           <p className="mt-3 text-muted-foreground">Check your email for your confirmation.</p>
-          <Link href="/shop" className="mt-6 text-sm font-semibold text-gold hover:underline">
+          <Link href={subscription ? "/subscribe" : "/shop"} className="mt-6 text-sm font-semibold text-gold hover:underline">
             Continue Shopping
           </Link>
         </>
