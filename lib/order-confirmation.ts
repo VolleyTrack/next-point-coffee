@@ -120,7 +120,7 @@ export function buildOrderConfirmationEmail(
     `Questions go to ${CONFIRMATION_REPLY_TO}.`,
     "",
     "Ryan Mullen",
-    "Founder | Next Point Coffee Co.",
+    "Next Point Coffee",
     `${CONFIRMATION_REPLY_TO} · nextpointcoffee.com`,
   ];
 
@@ -341,7 +341,7 @@ function renderHtml(input: {
               <p style="margin:16px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:${BLACK};">Questions go to <a href="mailto:${CONFIRMATION_REPLY_TO}" style="color:${GOLD};text-decoration:underline;">${CONFIRMATION_REPLY_TO}</a>.</p>
               <p style="margin:28px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:${BLACK};">
                 Ryan Mullen<br />
-                Founder | Next Point Coffee Co.<br />
+                Next Point Coffee<br />
                 <a href="mailto:${CONFIRMATION_REPLY_TO}" style="color:${GOLD};text-decoration:underline;">${CONFIRMATION_REPLY_TO}</a>
                 &middot;
                 <a href="https://nextpointcoffee.com" style="color:${GOLD};text-decoration:underline;">nextpointcoffee.com</a>
