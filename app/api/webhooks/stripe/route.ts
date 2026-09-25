@@ -4,6 +4,7 @@ import { recordPaidCheckout } from "@/lib/books/sync-paid-order";
 import { getCampaignById, recordSale } from "@/lib/campaigns/store";
 import { checkoutCustomerFromSession } from "@/lib/checkout-customer";
 import { markOrderPaymentIncomplete } from "@/lib/orders";
+import { sendOrderAlert, wasOrderPaid } from "@/lib/send-order-alert";
 import { sendOrderConfirmation } from "@/lib/send-order-confirmation";
 import { getStripe } from "@/lib/stripe";
 import { paidRetailPaymentSummary } from "@/lib/stripe-order-summary";
@@ -58,6 +59,8 @@ async function handlePaidCheckout(session: Stripe.Checkout.Session) {
     });
     const input = checkoutInputFromStripe(fullSession);
     const campaign = await resolveCampaign(input.metadata);
+    // Read before the upsert so the internal alert can tell a first payment from a redelivery.
+    const wasPaidBefore = await wasOrderPaid(fullSession.id);
     const saved = await recordPaidCheckout(input, campaign);
     await refreshPaymentSummary(stripe, fullSession);
 
@@ -88,6 +91,21 @@ async function handlePaidCheckout(session: Stripe.Checkout.Session) {
         console.error("Pre-order confirmation email failed:", err);
       }
     }
+
+    // Internal "new order" email to ORDER_ALERT_EMAIL (default info@). Never throws.
+    if (saved.order?.payment_status === "paid") {
+      try {
+        await sendOrderAlert(saved.order, {
+          wasPaidBefore,
+          placedAt: fullSession.created ?? null,
+          phone: fullSession.customer_details?.phone ?? null,
+          discountCents: fullSession.total_details?.amount_discount ?? null,
+          promoCode: await checkoutPromoCode(stripe, fullSession),
+        });
+      } catch (err) {
+        console.error("Internal order alert failed:", err instanceof Error ? err.message : err);
+      }
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to record paid checkout";
     booksIngestLog("error", "orders.record.failed", {
@@ -95,6 +113,28 @@ async function handlePaidCheckout(session: Stripe.Checkout.Session) {
       error: message,
     });
   }
+}
+
+/**
+ * Promotion code the shopper typed (e.g. LAUNCH10), for the internal alert only.
+ * Best effort: any Stripe error returns null and never affects the order.
+ */
+async function checkoutPromoCode(stripe: Stripe, session: Stripe.Checkout.Session): Promise<string | null> {
+  try {
+    for (const discount of session.discounts ?? []) {
+      const promo = discount.promotion_code;
+      if (promo && typeof promo === "object" && promo.code) return promo.code;
+      if (typeof promo === "string" && promo) {
+        const found = await stripe.promotionCodes.retrieve(promo);
+        if (found.code) return found.code;
+      }
+      const coupon = discount.coupon;
+      if (coupon && typeof coupon === "object" && coupon.name) return coupon.name;
+    }
+  } catch (err) {
+    console.error("Could not read the checkout promotion code:", err instanceof Error ? err.message : err);
+  }
+  return null;
 }
 
 /**
