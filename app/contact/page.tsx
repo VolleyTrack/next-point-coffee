@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2 } from "lucide-react";
+import { useBotTrap } from "@/components/bot-trap";
 import { site } from "@/lib/site";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const trap = useBotTrap();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -19,7 +21,7 @@ export default function ContactPage() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, ...trap.payload() }),
       });
       if (!res.ok) throw new Error("failed");
       setStatus("success");
@@ -48,6 +50,7 @@ export default function ContactPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          {trap.field}
           <div>
             <Label htmlFor="name">Name</Label>
             <Input

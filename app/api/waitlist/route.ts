@@ -1,15 +1,25 @@
 import { NextResponse } from "next/server";
+import { assessPublicFormSubmission, rejectBotSubmission } from "@/lib/bot-check";
 import { notifyNewSignup } from "@/lib/mailer";
 import { addSignup, listSignups } from "@/lib/newsletter";
 import { signupsToCsv } from "@/lib/signups-csv";
 
 export async function POST(request: Request) {
   const body = await request.json();
-  if (!body?.email || typeof body.email !== "string" || !body.email.includes("@")) {
+  const email = typeof body?.email === "string" ? body.email : "";
+  if (
+    rejectBotSubmission(
+      "waitlist",
+      assessPublicFormSubmission(body, { emails: email ? [email] : [] })
+    )
+  ) {
+    return NextResponse.json({ success: true, alreadySubscribed: false });
+  }
+
+  if (!email || !email.includes("@")) {
     return NextResponse.json({ error: "A valid email is required" }, { status: 400 });
   }
 
-  const email = body.email;
   const context = typeof body.context === "string" && body.context ? body.context : "general";
 
   let alreadySubscribed: boolean;

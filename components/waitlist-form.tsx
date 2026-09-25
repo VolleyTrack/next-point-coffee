@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useBotTrap } from "@/components/bot-trap";
 import { CheckCircle, Loader2 } from "lucide-react";
 
 interface WaitlistFormProps {
@@ -19,6 +20,7 @@ export function WaitlistForm({
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [alreadySubscribed, setAlreadySubscribed] = useState(false);
+  const trap = useBotTrap();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -28,7 +30,7 @@ export function WaitlistForm({
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, context }),
+        body: JSON.stringify({ email, context, ...trap.payload() }),
       });
       if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
@@ -57,6 +59,7 @@ export function WaitlistForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col gap-3 sm:flex-row">
+      {trap.field}
       <Input
         type="email"
         required
