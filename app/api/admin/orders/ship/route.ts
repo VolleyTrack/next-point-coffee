@@ -20,7 +20,7 @@ function isAuthorized(request: Request): boolean {
   const provided = request.headers.get("x-admin-key");
   if (adminKey && provided && safeEqual(provided, adminKey)) return true;
 
-  const booksSecret = process.env.BOOKS_INGEST_SECRET;
+  const booksSecret = process.env.BOOKS_INGEST_SECRET?.trim();
   const auth = request.headers.get("authorization") || "";
   const bearer = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
   return Boolean(booksSecret && bearer && safeEqual(bearer, booksSecret));
