@@ -27,6 +27,11 @@ export interface OrderRow {
   books_synced_at: string | null;
   /** Null until the pre-order confirmation email is sent. */
   confirmation_email_sent_at?: string | null;
+  /** Set by POST /api/admin/orders/ship (supabase/orders-shipping.sql). */
+  carrier?: string | null;
+  tracking_number?: string | null;
+  shipped_at?: string | null;
+  shipped_email_sent_at?: string | null;
   created_at: string;
 }
 
@@ -128,6 +133,19 @@ export async function getOrderById(orderId: string): Promise<OrderRow | null> {
 /** Set after a successful confirmation email. Not part of the checkout upsert. */
 export async function markConfirmationEmailSent(orderId: string, sentAt: string): Promise<void> {
   await patchOrderBy("id", orderId, { confirmation_email_sent_at: sentAt });
+}
+
+/** Save carrier / tracking / fulfillment_status='shipped' for one order id. */
+export async function updateOrderShipping(
+  orderId: string,
+  patch: { fulfillment_status: string; carrier: string; tracking_number: string; shipped_at: string }
+): Promise<void> {
+  await patchOrderBy("id", orderId, patch);
+}
+
+/** Set after a successful shipped email. */
+export async function markShippedEmailSent(orderId: string, sentAt: string): Promise<void> {
+  await patchOrderBy("id", orderId, { shipped_email_sent_at: sentAt });
 }
 
 export async function getOrderBySessionId(sessionId: string): Promise<OrderRow | null> {
