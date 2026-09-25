@@ -39,11 +39,22 @@ test("per-delivery totals multiply the rounded bag price", () => {
   assert.equal(calculateSubscriptionPrice(2, 0).savingsPerDeliveryCents, 0);
 });
 
-test("bags per delivery stay between 1 and 4", () => {
+test("no bag limit: only a 1-999 sanity ceiling", async () => {
+  const { MAX_BAGS_PER_DELIVERY, SUBSCRIPTION_QUANTITY_COPY } = await import("./subscription.ts");
+  assert.equal(MAX_BAGS_PER_DELIVERY, 999);
   assert.equal(clampBags(0), 1);
-  assert.equal(clampBags(9), 4);
+  assert.equal(clampBags(9), 9);
+  assert.equal(clampBags(100), 100);
   assert.equal(clampBags(2.7), 2);
-  assert.equal(calculateSubscriptionPrice(10).bags, 4);
+  assert.equal(clampBags(5000), 999);
+  assert.equal(clampBags(Number("")), 1);
+  const hundred = calculateSubscriptionPrice(100);
+  assert.equal(hundred.bags, 100);
+  assert.equal(hundred.subscriberPerDeliveryCents, 193500);
+  assert.equal(
+    SUBSCRIPTION_QUANTITY_COPY,
+    "Select Whole Bean or Ground, and how many you'd like to receive each month. 1, 2, 4, or 100, we're not judging."
+  );
 });
 
 test("waitlist context carries every choice", () => {
@@ -51,7 +62,7 @@ test("waitlist context carries every choice", () => {
   assert.equal(subscriptionContext(selection), "subscribe-first-serve-whole-bean-2bag-2wk");
   assert.equal(
     subscriptionContext({ coffee: "alternate", grind: "ground", bags: 7, frequency: "6wk" }),
-    "subscribe-alternate-ground-4bag-6wk"
+    "subscribe-alternate-ground-7bag-6wk"
   );
   assert.equal(selectionSummary(selection), "2 × 12 oz First Serve (Whole bean), every 2 weeks");
 });
@@ -67,6 +78,7 @@ test("subscription checkout is mode subscription with inline recurring price", a
   assert.equal(params.line_items?.length, 1);
   const line = params.line_items![0];
   assert.equal(line.quantity, 3);
+  assert.deepEqual(line.adjustable_quantity, { enabled: true, minimum: 1, maximum: 999 });
   assert.equal(line.price_data?.unit_amount, 1935);
   assert.equal(line.price_data?.currency, "usd");
   assert.deepEqual(line.price_data?.recurring, { interval: "week", interval_count: 6 });
@@ -97,7 +109,9 @@ test("selection parsing rejects bad input and round-trips plan metadata", async 
   const ok = parseSubscriptionSelection({ coffee: "alternate", grind: "whole-bean", bags: "9", frequency: "2wk" });
   assert.equal(ok.ok, true);
   if (!ok.ok) return;
-  assert.equal(ok.selection.bags, 4);
+  assert.equal(ok.selection.bags, 9);
+  const big = parseSubscriptionSelection({ coffee: "first-serve", grind: "ground", bags: 150, frequency: "4wk" });
+  assert.ok(big.ok && big.selection.bags === 150);
   assert.deepEqual(selectionFromPlanMetadata(subscriptionPlanMetadata(ok.selection)), ok.selection);
   assert.equal(selectionFromPlanMetadata({ channel: "retail" }), null);
 });
@@ -160,4 +174,58 @@ test("renewal invoice becomes a retail order and books ingest body", async () =>
   assert.deepEqual(body.items, [
     { product_slug: "second-wind", product_name: "Second Wind", grind: "whole-bean", form: "Whole bean", quantity: 2 },
   ]);
+});
+
+test("large subscriptions keep their bag count through metadata, renewals, and books", async () => {
+  const { renewalOrderInput, subscriptionDeliveryMetadata, subscriptionCheckoutSessionParams } = await import(
+    "./subscription.ts"
+  );
+  const { buildOrderInsert, buildBooksOrderIngestBody } = await import("./books/order-ingest.ts");
+
+  const meta = subscriptionDeliveryMetadata({ coffee: "first-serve", grind: "ground", bags: 150, frequency: "4wk" }, 0);
+  assert.equal(meta.quantity, "150");
+  assert.equal(meta.sub_bags, "150");
+  assert.equal(JSON.parse(meta.items ?? "[]")[0]?.quantity, 150);
+
+  const params = subscriptionCheckoutSessionParams(
+    { coffee: "first-serve", grind: "ground", bags: 150, frequency: "4wk" },
+    "https://example.com",
+    { PREORDER_SHIP_DATE: "2026-10-08" } as NodeJS.ProcessEnv
+  );
+  assert.equal(params.line_items?.[0]?.quantity, 150);
+
+  // Plan metadata says 2, but the shopper changed it to 120 on Stripe: the invoice wins.
+  const input = renewalOrderInput(
+    {
+      id: "in_big",
+      created: 1_791_000_000,
+      subtotal: 232200,
+      amount_paid: 232200,
+      currency: "usd",
+      customer_email: "big@example.com",
+      customer_name: "Big Order",
+      customer_shipping: null,
+      quantity: 120,
+    },
+    { coffee: "first-serve", grind: "ground", bags: 2, frequency: "4wk" },
+    0
+  );
+  assert.equal((input.line_items as Array<{ quantity: number }>)[0]?.quantity, 120);
+  assert.equal(input.metadata?.quantity, "120");
+  const order = buildOrderInsert(input, null);
+  const body = buildBooksOrderIngestBody({ ...order, id: "order-big", campaign_share_owed: null }, "2026-10-22T15:00:00.000Z");
+  assert.equal(body.items?.[0]?.quantity, 120);
+});
+
+test("shop cards offer the subscription for single coffees, default every 4 weeks", async () => {
+  const { isSubscribableSlug, SHOP_SUBSCRIPTION_OFFER, DEFAULT_FREQUENCY, defaultSelection, frequencyOptions, coffeeChoices } =
+    await import("./subscription.ts");
+  assert.equal(SHOP_SUBSCRIPTION_OFFER, "SAVE 10% with a Monthly Subscription");
+  assert.equal(isSubscribableSlug("first-serve"), true);
+  assert.equal(isSubscribableSlug("second-wind"), true);
+  assert.equal(isSubscribableSlug("half-caff"), false);
+  assert.equal(DEFAULT_FREQUENCY, "4wk");
+  assert.equal(defaultSelection.frequency, "4wk");
+  assert.deepEqual(frequencyOptions.map((option) => option.weeks), [2, 4, 6]);
+  assert.ok(coffeeChoices.some((choice) => choice.id === "alternate"));
 });

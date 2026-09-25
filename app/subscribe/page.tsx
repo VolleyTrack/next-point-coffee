@@ -8,6 +8,7 @@ import { preorderShipDateLabel } from "@/lib/preorder";
 import { site, storeLive } from "@/lib/site";
 import {
   SUBSCRIBER_DISCOUNT_PERCENT,
+  SUBSCRIPTION_QUANTITY_COPY,
   calculateSubscriptionPrice,
   formatUsd,
   customerPortalUrl,
@@ -29,7 +30,7 @@ const steps = [
   },
   {
     title: "Set your pace",
-    body: "One to four 12 oz bags, every 2, 4, or 6 weeks. You call the rhythm.",
+    body: `${SUBSCRIPTION_QUANTITY_COPY} Every 2, 4, or 6 weeks. You call the rhythm.`,
   },
   {
     title: "Own every morning",
@@ -78,7 +79,7 @@ function buildFaqs(shipDate: string, portalUrl: string | null) {
   },
   {
     q: "Can I change my coffee, grind, or bag count later?",
-    a: "Yes. Switch coffees, change grind, or go up or down between one and four bags before your next delivery.",
+    a: "Yes. Switch coffees, change grind, or change how many bags you get before your next delivery. There's no bag limit.",
   },
   {
     q: "How do skipping, pausing, and canceling work?",

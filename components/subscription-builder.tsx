@@ -9,6 +9,7 @@ import { grindOptions, storeLive } from "@/lib/site";
 import {
   MAX_BAGS_PER_DELIVERY,
   MIN_BAGS_PER_DELIVERY,
+  SUBSCRIPTION_QUANTITY_COPY,
   calculateSubscriptionPrice,
   clampBags,
   coffeeChoices,
@@ -163,6 +164,7 @@ export function SubscriptionBuilder({ shipLine }: { shipLine: string }) {
         </OptionGroup>
 
         <OptionGroup legend="Bags per delivery (12 oz)" step={3}>
+          <p className="mb-3 text-sm text-muted-foreground">{SUBSCRIPTION_QUANTITY_COPY}</p>
           <div className="flex items-center gap-4">
             <Button
               type="button"
@@ -175,9 +177,16 @@ export function SubscriptionBuilder({ shipLine }: { shipLine: string }) {
             >
               <Minus />
             </Button>
-            <span className="w-10 text-center text-3xl font-black text-np-cream" aria-live="polite">
-              {selection.bags}
-            </span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={MIN_BAGS_PER_DELIVERY}
+              max={MAX_BAGS_PER_DELIVERY}
+              value={selection.bags}
+              aria-label="Bags per delivery"
+              onChange={(event) => update("bags", clampBags(Number(event.target.value)))}
+              className="h-11 w-20 rounded-md border border-gold/40 bg-np-black text-center text-2xl font-black text-np-cream [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
             <Button
               type="button"
               variant="outline"
@@ -190,7 +199,7 @@ export function SubscriptionBuilder({ shipLine }: { shipLine: string }) {
               <Plus />
             </Button>
             <span className="text-sm text-muted-foreground">
-              {selection.bags === 1 ? "bag" : "bags"} · up to {MAX_BAGS_PER_DELIVERY}
+              {selection.bags === 1 ? "bag" : "bags"} per delivery
             </span>
           </div>
         </OptionGroup>
