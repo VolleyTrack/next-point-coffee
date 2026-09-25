@@ -5,7 +5,7 @@ import { CheckCircle, Loader2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBotTrap } from "@/components/bot-trap";
-import { grindOptions } from "@/lib/site";
+import { grindOptions, storeLive } from "@/lib/site";
 import {
   MAX_BAGS_PER_DELIVERY,
   MIN_BAGS_PER_DELIVERY,
@@ -17,7 +17,6 @@ import {
   frequencyOptions,
   selectionSummary,
   subscriptionContext,
-  subscriptionsLive,
   type SubscriptionSelection,
 } from "@/lib/subscription";
 import { cn } from "@/lib/utils";
@@ -72,12 +71,12 @@ function Choice({
   );
 }
 
-export function SubscriptionBuilder() {
+export function SubscriptionBuilder({ shipLine }: { shipLine: string }) {
   const [selection, setSelection] = useState<SubscriptionSelection>(defaultSelection);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [alreadySubscribed, setAlreadySubscribed] = useState(false);
-  const [liveNotice, setLiveNotice] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const trap = useBotTrap();
 
   const price = calculateSubscriptionPrice(selection.bags);
@@ -106,12 +105,24 @@ export function SubscriptionBuilder() {
     }
   }
 
-  function startSubscription() {
-    // TODO(subscriptions-live): POST the selection to /api/subscribe/checkout and
-    // redirect to a Stripe Checkout Session created with mode: "subscription".
-    // See the TODO at the bottom of lib/subscription.ts. Billing is intentionally
-    // not implemented, so this never starts a payment.
-    setLiveNotice(true);
+  async function startSubscription() {
+    setStatus("loading");
+    setCheckoutError(null);
+    try {
+      const res = await fetch("/api/subscribe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(selection),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || typeof data.url !== "string") {
+        throw new Error(typeof data.error === "string" ? data.error : "Could not start checkout. Please try again.");
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Could not start checkout. Please try again.");
+      setStatus("error");
+    }
   }
 
   return (
@@ -212,6 +223,8 @@ export function SubscriptionBuilder() {
           </p>
         ) : null}
 
+        <p className="mt-3 text-sm font-semibold text-gold">{shipLine}</p>
+
         <dl className="mt-6 space-y-3 border-t border-gold/20 pt-6 text-sm">
           <div className="flex justify-between text-muted-foreground">
             <dt>Retail per bag</dt>
@@ -236,33 +249,33 @@ export function SubscriptionBuilder() {
         </dl>
 
         <div className="mt-8">
-          {subscriptionsLive ? (
+          {storeLive ? (
             <>
               <Button
                 type="button"
                 onClick={startSubscription}
+                disabled={status === "loading"}
                 className="h-12 w-full bg-gold text-base font-bold text-np-black hover:bg-gold/90"
               >
-                Start my subscription
+                {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Start my subscription"}
               </Button>
-              {liveNotice ? (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Subscription checkout is almost ready. Email us and we will set you up.
-                </p>
-              ) : null}
+              {checkoutError ? <p className="mt-3 text-sm text-red-400">{checkoutError}</p> : null}
+              <p className="mt-3 text-xs text-muted-foreground">
+                Secure checkout by Stripe. Billed today, then on your schedule.
+              </p>
             </>
           ) : status === "success" ? (
             <div className="flex items-start gap-2 rounded-md border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold">
               <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" />
               {alreadySubscribed
-                ? "You're already on our list. We saved this lineup and will email you when subscriptions open."
+                ? "You're already on our list. We'll email you when subscriptions open."
                 : "You're on the subscription waitlist. We'll email you when subscriptions open."}
             </div>
           ) : (
             <form onSubmit={joinWaitlist} className="space-y-3">
               {trap.field}
               <label htmlFor="subscribe-email" className="text-sm text-muted-foreground">
-                Subscriptions open soon after launch. Save your lineup and we&apos;ll email you first.
+                Subscriptions open with the shop on launch day. Save your lineup and we&apos;ll email you first.
               </label>
               <Input
                 id="subscribe-email"

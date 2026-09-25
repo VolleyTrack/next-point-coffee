@@ -4,13 +4,15 @@ import { ArrowDown, CalendarClock, Coffee, Flame, PauseCircle, Truck } from "luc
 import { Button } from "@/components/ui/button";
 import { RoastDots } from "@/components/roast-dots";
 import { SubscriptionBuilder } from "@/components/subscription-builder";
-import { site } from "@/lib/site";
+import { preorderShipDateLabel } from "@/lib/preorder";
+import { site, storeLive } from "@/lib/site";
 import {
   SUBSCRIBER_DISCOUNT_PERCENT,
   calculateSubscriptionPrice,
   formatUsd,
+  customerPortalUrl,
+  subscriptionHelpEmail,
   subscriptionProducts,
-  subscriptionsLive,
 } from "@/lib/subscription";
 import { cn } from "@/lib/utils";
 
@@ -58,12 +60,17 @@ const perks = [
   },
 ];
 
-const faqs = [
+function buildFaqs(shipDate: string, portalUrl: string | null) {
+  return [
   {
-    q: "When do subscriptions start?",
-    a: subscriptionsLive
-      ? "Your first delivery ships on our next roast day after you subscribe."
-      : "Subscriptions open shortly after our launch. Join the waitlist with your lineup and we'll email you the moment you can start.",
+    q: "When does my first bag ship?",
+    a: `First subscription deliveries are roasted, packaged, and ship starting ${shipDate}, just like our pre-orders.${
+      storeLive ? "" : " Subscriptions open with the shop. Join the waitlist with your lineup and we'll email you the moment you can start."
+    }`,
+  },
+  {
+    q: "When am I billed?",
+    a: "Your first delivery is billed when you subscribe. After that you're billed on your schedule (every 2, 4, or 6 weeks from your start date), and each billed delivery ships on our next roast day.",
   },
   {
     q: "What does \"Alternate both\" mean?",
@@ -75,7 +82,9 @@ const faqs = [
   },
   {
     q: "How do skipping, pausing, and canceling work?",
-    a: "You can skip a delivery, pause, or cancel anytime before your next billing date. Once a delivery is roasted and packed, it ships.",
+    a: portalUrl
+      ? `Use the Manage subscription link on this page (sign in with your email) to skip, pause, update your card, or cancel anytime before your next billing date. You can also email ${subscriptionHelpEmail}. Once a delivery is roasted and packed, it ships.`
+      : `Email ${subscriptionHelpEmail} anytime before your next billing date to skip a delivery, pause, or cancel. Once a delivery is roasted and packed, it ships.`,
   },
   {
     q: "Is shipping really included?",
@@ -89,10 +98,14 @@ const faqs = [
     q: "Can I use a promo code on a subscription?",
     a: "The subscriber discount is already built in, so other promo codes don't stack with subscriptions.",
   },
-];
+  ];
+}
 
 export default function SubscribePage() {
   const onePrice = calculateSubscriptionPrice(1);
+  const shipDate = preorderShipDateLabel();
+  const portalUrl = customerPortalUrl();
+  const faqs = buildFaqs(shipDate, portalUrl);
 
   return (
     <div>
@@ -101,7 +114,7 @@ export default function SubscribePage() {
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-14 sm:py-20 md:grid-cols-2">
           <div>
             <p className="mb-4 text-xs font-semibold uppercase tracking-widest-plus text-gold">
-              Coffee subscription{subscriptionsLive ? "" : " · Waitlist open"}
+              Coffee subscription · {storeLive ? `First deliveries ship ${shipDate}` : "Waitlist open"}
             </p>
             <h1 className="text-4xl font-black leading-[1.1] tracking-tight text-np-cream sm:text-5xl md:text-6xl md:leading-[1.05]">
               Never start a day empty.
@@ -194,7 +207,7 @@ export default function SubscribePage() {
             {SUBSCRIBER_DISCOUNT_PERCENT}% on every delivery.
           </p>
         </div>
-        <SubscriptionBuilder />
+        <SubscriptionBuilder shipLine={`First delivery roasted, packaged, and shipping ${shipDate}.`} />
       </section>
 
       {/* Perks */}
@@ -232,13 +245,28 @@ export default function SubscribePage() {
             </details>
           ))}
         </div>
-        <p className="mt-8 text-sm text-muted-foreground">
-          Still have a question? Email{" "}
-          <a href={`mailto:${site.contactEmail}`} className="text-gold hover:underline">
-            {site.contactEmail}
-          </a>
-          .
-        </p>
+        <div className="mt-8 space-y-3 text-sm text-muted-foreground">
+          {portalUrl ? (
+            <p>
+              Already subscribed?{" "}
+              <a href={portalUrl} className="font-semibold text-gold hover:underline">
+                Manage subscription
+              </a>{" "}
+              to skip, pause, or cancel.
+            </p>
+          ) : null}
+          <p>
+            To skip, pause, or cancel, email{" "}
+            <a href={`mailto:${subscriptionHelpEmail}`} className="text-gold hover:underline">
+              {subscriptionHelpEmail}
+            </a>
+            . Other questions:{" "}
+            <a href={`mailto:${site.contactEmail}`} className="text-gold hover:underline">
+              {site.contactEmail}
+            </a>
+            .
+          </p>
+        </div>
       </section>
     </div>
   );
