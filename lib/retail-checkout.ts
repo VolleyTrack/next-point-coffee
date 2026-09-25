@@ -9,6 +9,11 @@ import {
   type GrindId,
   type Product,
 } from "@/lib/site";
+import {
+  ITEMS_SUMMARY_METADATA_LIMIT,
+  orderSummaryText,
+  PAYMENT_DESCRIPTION_LIMIT,
+} from "@/lib/stripe-order-summary";
 
 export interface ResolvedRetailLine {
   slug: string;
@@ -112,6 +117,25 @@ export function retailCheckoutSessionParams(
     success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/shop`,
     metadata: retailCheckoutMetadata(lines),
+    payment_intent_data: retailPaymentIntentData(lines),
+  };
+}
+
+/**
+ * What shows on the Stripe payment page: "1 × First Serve — Whole bean".
+ * The webhook rewrites it with the final quantities after checkout, because
+ * shoppers can change the bag count on the Stripe page.
+ */
+export function retailPaymentIntentData(
+  lines: ResolvedRetailLine[]
+): Stripe.Checkout.SessionCreateParams.PaymentIntentData {
+  const summary = lines.map((line) => ({ quantity: line.quantity, title: line.title }));
+  return {
+    description: orderSummaryText(summary, PAYMENT_DESCRIPTION_LIMIT),
+    metadata: {
+      channel: "retail",
+      items_summary: orderSummaryText(summary, ITEMS_SUMMARY_METADATA_LIMIT),
+    },
   };
 }
 
@@ -124,6 +148,10 @@ export function retailCheckoutMetadata(lines: ResolvedRetailLine[]): Record<stri
   const metadata: Record<string, string> = { channel: "retail" };
   const items = JSON.stringify(refs);
   if (items.length <= METADATA_VALUE_LIMIT) metadata.items = items;
+  metadata.items_summary = orderSummaryText(
+    lines.map((line) => ({ quantity: line.quantity, title: line.title })),
+    ITEMS_SUMMARY_METADATA_LIMIT
+  );
 
   if (lines.length === 1) {
     const line = lines[0];
