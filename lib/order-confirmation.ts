@@ -12,9 +12,13 @@ export const CONFIRMATION_SUBJECT = "Thank you for your pre-order, Next Point Co
 export const CONFIRMATION_TAGLINE = "You Can't Change the Last Point. Own the Next.";
 export const CONFIRMATION_LOGO_URL = "https://nextpointcoffee.com/brand/next-point-logo.png";
 
-/** Natural pixel size of public/brand/next-point-logo.png (717×295). */
-const LOGO_NATURAL_WIDTH = 717;
-const LOGO_NATURAL_HEIGHT = 295;
+/**
+ * Natural pixel size of public/brand/next-point-logo.png.
+ * Cropped from the official round badge so the arrow, NEXT POINT, and the
+ * full COFFEE CO. line sit on #0A0A0A with margin on every side.
+ */
+const LOGO_NATURAL_WIDTH = 627;
+const LOGO_NATURAL_HEIGHT = 543;
 /** Display size inside the 600px email. Height keeps the full wordmark. */
 export const CONFIRMATION_LOGO_WIDTH = 480;
 export const CONFIRMATION_LOGO_HEIGHT = Math.round(
@@ -24,7 +28,7 @@ export const CONFIRMATION_LOGO_HEIGHT = Math.round(
 const BLACK = "#0A0A0A";
 const CREAM = "#F0E0D0";
 const GOLD = "#B08030";
-const LOGO_BLACK = "#000000";
+const LOGO_BLACK = BLACK;
 
 export interface ConfirmationOrder {
   id: string;

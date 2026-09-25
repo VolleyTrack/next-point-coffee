@@ -78,7 +78,11 @@ test("confirmation email is branded, summarized, and does not crop the wordmark"
   assert.match(html, new RegExp(`height="${CONFIRMATION_LOGO_HEIGHT}"`));
   assert.match(html, /alt="Next Point Coffee Co\."/);
   assert.doesNotMatch(html, /object-fit|background-size:\s*cover|overflow:\s*hidden/i);
-  assert.equal(CONFIRMATION_LOGO_WIDTH / CONFIRMATION_LOGO_HEIGHT, 480 / 197);
+  const logoPng = await readFile(new URL("../public/brand/next-point-logo.png", import.meta.url));
+  assert.equal(logoPng.readUInt32BE(16), 627);
+  assert.equal(logoPng.readUInt32BE(20), 543);
+  assert.equal(CONFIRMATION_LOGO_HEIGHT, Math.round((CONFIRMATION_LOGO_WIDTH * 543) / 627));
+  assert.equal(CONFIRMATION_LOGO_WIDTH / CONFIRMATION_LOGO_HEIGHT, 480 / 416);
   assert.match(html, /#0A0A0A/);
   assert.match(html, /#F0E0D0/);
   assert.match(html, /#B08030/);
