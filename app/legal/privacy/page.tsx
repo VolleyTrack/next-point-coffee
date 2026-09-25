@@ -5,7 +5,7 @@ export default function PrivacyPage() {
       <h1 className="mt-2 text-4xl font-black text-np-cream">Privacy Policy</h1>
       <div className="mt-8 space-y-6 text-sm leading-relaxed">
         <p>
-          Next Point Coffee Co. ("we," "us," or "our") respects your privacy. This policy explains
+          Next Point Coffee Co. (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) respects your privacy. This policy explains
           what information we collect and how we use it.
         </p>
         <h2 className="text-lg font-bold text-np-cream">Information We Collect</h2>

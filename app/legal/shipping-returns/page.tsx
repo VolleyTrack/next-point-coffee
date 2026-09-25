@@ -18,13 +18,13 @@ export default function ShippingReturnsPage() {
           <a href="mailto:info@nextpointcoffee.com" className="text-gold hover:underline">
             info@nextpointcoffee.com
           </a>{" "}
-          with your order number and a photo of the issue, and we'll make it right with a
+          with your order number and a photo of the issue, and we&apos;ll make it right with a
           replacement or refund.
         </p>
         <h2 className="text-lg font-bold text-np-cream">Order Issues</h2>
         <p>
-          If your order hasn't arrived within the estimated delivery window, please reach out and
-          we'll help track it down.
+          If your order hasn&apos;t arrived within the estimated delivery window, please reach out and
+          we&apos;ll help track it down.
         </p>
         <p className="mt-8 rounded-md border border-gold/20 bg-card p-4 text-xs">
           This is a general template and has not been reviewed by an attorney. Please have this

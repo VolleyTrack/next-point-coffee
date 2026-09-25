@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { booksIngestLog, isPaidCheckout, type CheckoutOrderInput } from "@/lib/books/order-ingest";
 import { recordPaidCheckout } from "@/lib/books/sync-paid-order";
 import { getCampaignById, recordSale } from "@/lib/campaigns/store";
+import { checkoutCustomerFromSession } from "@/lib/checkout-customer";
 import { markOrderPaymentIncomplete } from "@/lib/orders";
+import { sendOrderConfirmation } from "@/lib/send-order-confirmation";
 import { getStripe } from "@/lib/stripe";
 import type Stripe from "stripe";
 
@@ -76,6 +78,14 @@ async function handlePaidCheckout(session: Stripe.Checkout.Session) {
         console.error("Failed to record campaign sale:", err);
       }
     }
+
+    if (saved.order?.payment_status === "paid") {
+      try {
+        await sendOrderConfirmation(saved.order);
+      } catch (err) {
+        console.error("Pre-order confirmation email failed:", err);
+      }
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to record paid checkout";
     booksIngestLog("error", "orders.record.failed", {
@@ -94,9 +104,7 @@ function checkoutInputFromStripe(session: Stripe.Checkout.Session): CheckoutOrde
     amount_total: session.amount_total ?? 0,
     currency: session.currency ?? "usd",
     payment_status: session.payment_status ?? null,
-    customer_email: session.customer_details?.email ?? session.customer_email ?? "unknown",
-    customer_name: session.customer_details?.name ?? null,
-    shipping_address: session.customer_details?.address ?? null,
+    ...checkoutCustomerFromSession(session),
     line_items: session.line_items?.data ?? [],
     metadata: session.metadata ?? null,
   };

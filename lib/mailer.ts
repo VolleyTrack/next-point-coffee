@@ -258,6 +258,73 @@ export async function notifyBooksIngestFailure(notice: { subject: string; text: 
   }
 }
 
+/**
+ * Customer-facing mail from GMAIL_USER. Throws when Gmail is not configured
+ * or the send fails so the caller can log it without failing checkout.
+ */
+export async function sendCustomerMail(input: {
+  to: string;
+  fromName: string;
+  replyTo: string;
+  subject: string;
+  text: string;
+  html: string;
+}): Promise<void> {
+  const user = process.env.GMAIL_USER;
+  const t = getTransporter();
+  if (!t || !user) {
+    throw new Error("GMAIL_USER or GMAIL_APP_PASSWORD is not set.");
+  }
+  await t.sendMail({
+    from: `"${input.fromName}" <${user}>`,
+    to: input.to,
+    replyTo: input.replyTo,
+    subject: input.subject,
+    text: input.text,
+    html: input.html,
+  });
+}
+
+/**
+ * Ops alert when a paid customer's confirmation email did not send.
+ * Same Gmail account and NOTIFY_EMAIL inbox as other site alerts. Does not throw.
+ */
+export async function notifyOrderConfirmationFailure(notice: { subject: string; text: string }): Promise<void> {
+  const t = getTransporter();
+  const to = notifyAddress();
+  if (!t || !to) {
+    console.error(
+      JSON.stringify({
+        source: "next-point-coffee",
+        event: "orders.confirmation_email.alert_unconfigured",
+        email_subject: notice.subject,
+        email_text: notice.text,
+      })
+    );
+    return;
+  }
+
+  try {
+    await t.sendMail({
+      from: `"Next Point Coffee" <${process.env.GMAIL_USER}>`,
+      to,
+      subject: notice.subject,
+      text: notice.text,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : "Unknown mail error";
+    console.error(
+      JSON.stringify({
+        source: "next-point-coffee",
+        event: "orders.confirmation_email.alert_failed",
+        error: detail,
+        email_subject: notice.subject,
+        email_text: notice.text,
+      })
+    );
+  }
+}
+
 export async function notifyContactForm(name: string, email: string, message: string): Promise<void> {
   const t = getTransporter();
   const to = notifyAddress();
