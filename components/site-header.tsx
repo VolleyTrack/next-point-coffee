@@ -10,6 +10,7 @@ import { campaignsLive } from "@/lib/site";
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/shop", label: "Shop" },
+  { href: "/subscribe", label: "Subscribe" },
   { href: "/about", label: "Our Story" },
   { href: "/fundraising", label: "Fundraising" },
   ...(campaignsLive ? [{ href: "/campaigns", label: "Start a campaign" }] : []),
@@ -32,7 +33,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-5 md:flex lg:gap-8">
           {navItems.map((item) => (
             <Link
               key={item.href}
