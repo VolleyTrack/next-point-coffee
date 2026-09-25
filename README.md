@@ -19,7 +19,7 @@ Open [http://localhost:3000](http://localhost:3000). No env vars are required fo
 | `ADMIN_ACCESS_KEY` | Existing newsletter/orders key. Also unlocks campaigns **preview** while live is false. |
 | `CAMPAIGNS_PREVIEW_KEY` | Optional; if set, used instead of `ADMIN_ACCESS_KEY` for the campaigns unlock only. |
 
-Mirror of shop: `NEXT_PUBLIC_STORE_LIVE` gates checkout; `NEXT_PUBLIC_CAMPAIGNS_LIVE` gates the public campaigns portal. When the shop flag is true, buyers pre-order First Serve or Second Wind and choose Ground or Whole bean. That choice is on the Stripe line item and, when present, on the books ingest `items` field. Half Caff stays coming soon. The $20 bag price still includes shipping.
+Mirror of shop: `NEXT_PUBLIC_STORE_LIVE` gates checkout; `NEXT_PUBLIC_CAMPAIGNS_LIVE` gates the public campaigns portal. When the shop flag is true, buyers pre-order First Serve or Second Wind and choose Ground or Whole bean. That choice is on the Stripe line item and, when present, on the books ingest `items` field. Half Caff stays coming soon. The $21.50 bag price still includes shipping.
 
 ### Production (Vercel project `next-point-coffee`)
 
