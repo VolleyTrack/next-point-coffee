@@ -75,7 +75,7 @@ export interface Product {
   available: boolean;
   purchasable: boolean;
   netWeight: string;
-  priceCents: number; // All-in retail price in cents. Shipping is included in the bag price. $20.00 = 2000
+  priceCents: number; // All-in retail price in cents. Shipping is included in the bag price. $21.50 = 2150
 }
 
 export const products: Product[] = [
@@ -90,7 +90,7 @@ export const products: Product[] = [
     available: true,
     purchasable: true,
     netWeight: "12 OZ (341g)",
-    priceCents: 2000,
+    priceCents: 2150,
   },
   {
     slug: "second-wind",
@@ -103,7 +103,7 @@ export const products: Product[] = [
     available: true,
     purchasable: true,
     netWeight: "12 OZ (341g)",
-    priceCents: 2000,
+    priceCents: 2150,
   },
   {
     slug: "half-caff",

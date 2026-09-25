@@ -152,7 +152,7 @@ test("a later lookup does not wipe a campaign share already stored", () => {
 });
 
 test("ingest body uses gross cents and omits campaign fields for retail", () => {
-  const body = buildBooksOrderIngestBody(order({ amount_total: 2000 }), "2026-09-23T15:04:05.000Z");
+  const body = buildBooksOrderIngestBody(order({ amount_total: 2150 }), "2026-09-23T15:04:05.000Z");
   assert.deepEqual(body, {
     source: "next-point-coffee",
     contract: "paid-order",
@@ -161,7 +161,7 @@ test("ingest body uses gross cents and omits campaign fields for retail", () => 
     campaign_id: null,
     campaign_name: null,
     order_date: "2026-09-23T15:04:05.000Z",
-    gross_amount_cents: 2000,
+    gross_amount_cents: 2150,
     currency: "usd",
     stripe_session_id: SESSION,
     order_id: "order-1",

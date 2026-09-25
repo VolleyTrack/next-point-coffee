@@ -20,8 +20,8 @@ test("launch cart accepts First Serve and Second Wind in both forms", () => {
   assert.deepEqual(
     cart.lines.map((line) => ({ title: line.title, priceCents: line.priceCents, quantity: line.quantity })),
     [
-      { title: "First Serve — Ground", priceCents: 2000, quantity: 1 },
-      { title: "Second Wind — Whole bean", priceCents: 2000, quantity: 3 },
+      { title: "First Serve — Ground", priceCents: 2150, quantity: 1 },
+      { title: "Second Wind — Whole bean", priceCents: 2150, quantity: 3 },
     ]
   );
 
@@ -30,7 +30,7 @@ test("launch cart accepts First Serve and Second Wind in both forms", () => {
   assert.equal(stripe.price_data.product_data.metadata.grind, "whole-bean");
   assert.equal(stripe.price_data.product_data.metadata.form, "Whole bean");
   assert.match(stripe.price_data.product_data.description, /^Whole bean\. Dark Roast\./);
-  assert.equal(stripe.price_data.unit_amount, 2000);
+  assert.equal(stripe.price_data.unit_amount, 2150);
   assert.equal(stripe.quantity, 3);
   assert.deepEqual(stripe.adjustable_quantity, {
     enabled: true,
@@ -65,7 +65,7 @@ test("retail checkout sessions accept a promotion code", () => {
   assert.equal(params.metadata?.grind, "whole-bean");
   assert.equal(params.line_items?.length, 1);
   assert.equal(params.line_items?.[0].quantity, 2);
-  assert.equal(params.line_items?.[0].price_data?.unit_amount, 2000);
+  assert.equal(params.line_items?.[0].price_data?.unit_amount, 2150);
 });
 
 test("retail checkout rejects Half Caff and a missing grind", () => {
@@ -140,9 +140,9 @@ test("stored line items and books ingest keep grind and form", () => {
     {
       id: "cs_test_grind",
       created: 1_758_000_000,
-      amount_subtotal: 6000,
+      amount_subtotal: 6450,
       amount_shipping: 0,
-      amount_total: 6000,
+      amount_total: 6450,
       currency: "usd",
       payment_status: "paid",
       customer_email: "buyer@example.com",
@@ -159,7 +159,7 @@ test("stored line items and books ingest keep grind and form", () => {
     {
       id: "order-grind",
       stripe_session_id: "cs_test_grind",
-      amount_total: 6000,
+      amount_total: 6450,
       currency: "usd",
       channel: "retail",
       campaign_id: null,

@@ -38,21 +38,21 @@ const sampleOrder: ConfirmationOrder = {
       grind: "whole-bean",
       form: "Whole bean",
       quantity: 2,
-      amount_subtotal: 4000,
+      amount_subtotal: 4300,
       amount_discount: 500,
-      amount_total: 3500,
+      amount_total: 3800,
     },
     {
       description: "Second Wind — Ground",
       quantity: 1,
-      amount_subtotal: 2000,
+      amount_subtotal: 2150,
       amount_discount: 0,
-      amount_total: 2000,
+      amount_total: 2150,
     },
   ],
-  amount_subtotal: 6000,
+  amount_subtotal: 6450,
   amount_shipping: 0,
-  amount_total: 5500,
+  amount_total: 5950,
   currency: "usd",
   payment_status: "paid",
   channel: "retail",
@@ -93,7 +93,7 @@ test("confirmation email is branded, summarized, and does not crop the wordmark"
   assert.match(html, /Ground/);
   assert.match(html, /Promo discount/);
   assert.match(html, /\$5\.00/);
-  assert.match(html, /\$55\.00/);
+  assert.match(html, /\$59\.50/);
   assert.match(html, /Shipping is included\./);
   assert.match(html, /120 Main Street/);
   assert.match(html, /Athens, GA 30601/);

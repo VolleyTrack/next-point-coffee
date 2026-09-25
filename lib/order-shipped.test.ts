@@ -16,8 +16,8 @@ const order: ShippableOrder = {
   customer_name: "Test Buyer",
   shipping_address: { line1: "1 Main St", line2: null, city: "Tampa", state: "FL", postal_code: "33601", country: "US" },
   line_items: [
-    { description: "First Serve — Whole bean", quantity: 1, amount_subtotal: 2000 },
-    { product_name: "Second Wind", form: "Ground", quantity: 2, amount_subtotal: 4000 },
+    { description: "First Serve — Whole bean", quantity: 1, amount_subtotal: 2150 },
+    { product_name: "Second Wind", form: "Ground", quantity: 2, amount_subtotal: 4300 },
   ],
   payment_status: "paid",
   fulfillment_status: "unfulfilled",
