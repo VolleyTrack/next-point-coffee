@@ -100,7 +100,10 @@ test("confirmation email is branded, summarized, and does not crop the wordmark"
   assert.match(html, /October 8, 2026/);
   assert.match(html, /ryan@nextpointcoffee\.com/);
   assert.match(html, /Ryan Mullen/);
-  assert.match(html, /Founder \| Next Point Coffee Co\./);
+  assert.match(html, /Ryan Mullen<br \/>\s*Next Point Coffee<br \/>/);
+  assert.doesNotMatch(html, /Founder/);
+  assert.match(text, /Ryan Mullen\nNext Point Coffee\n/);
+  assert.doesNotMatch(text, /Founder/);
   assert.match(html, /nextpointcoffee\.com/);
   assert.match(text, /Hi Alex,/);
   assert.match(text, /Order 32BA6FD5/);
