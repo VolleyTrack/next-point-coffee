@@ -13,6 +13,7 @@ import {
   isSubscriptionRenewal,
   renewalOrderInput,
   selectionFromPlanMetadata,
+  subscriptionAlertLabel,
   subscriptionCycleIndex,
   subscriptionIdFromInvoice,
 } from "@/lib/subscription";
@@ -116,6 +117,7 @@ async function handlePaidCheckout(session: Stripe.Checkout.Session) {
           phone: fullSession.customer_details?.phone ?? null,
           discountCents: fullSession.total_details?.amount_discount ?? null,
           promoCode: await checkoutPromoCode(stripe, fullSession),
+          subscription: subscriptionAlertLabel(input.metadata),
         });
       } catch (err) {
         console.error("Internal order alert failed:", err instanceof Error ? err.message : err);
@@ -166,8 +168,25 @@ async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
       cycle,
       customer?.shipping ?? null
     );
+    // Read before the upsert so a redelivered invoice.paid does not alert twice.
+    const wasPaidBefore = await wasOrderPaid(input.id);
     // No pre-order confirmation email on renewals. Stripe sends the receipt.
-    await recordPaidCheckout(input, null);
+    const saved = await recordPaidCheckout(input, null);
+
+    // Internal alert to ORDER_ALERT_EMAIL for each renewal. Never throws.
+    if (saved.order?.payment_status === "paid") {
+      try {
+        await sendOrderAlert(saved.order, {
+          kind: "renewal",
+          wasPaidBefore,
+          placedAt: input.created,
+          phone: customer?.phone ?? null,
+          subscription: subscriptionAlertLabel(input.metadata),
+        });
+      } catch (err) {
+        console.error("Internal renewal alert failed:", err instanceof Error ? err.message : err);
+      }
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to record subscription renewal";
     booksIngestLog("error", "orders.record.failed", { stripe_invoice_id: invoice.id, error: message });
