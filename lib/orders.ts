@@ -32,6 +32,8 @@ export interface OrderRow {
   tracking_number?: string | null;
   shipped_at?: string | null;
   shipped_email_sent_at?: string | null;
+  /** Internal new-order alert (supabase/orders-order-alert.sql). Null until sent. */
+  order_alert_sent_at?: string | null;
   created_at: string;
 }
 
@@ -133,6 +135,11 @@ export async function getOrderById(orderId: string): Promise<OrderRow | null> {
 /** Set after a successful confirmation email. Not part of the checkout upsert. */
 export async function markConfirmationEmailSent(orderId: string, sentAt: string): Promise<void> {
   await patchOrderBy("id", orderId, { confirmation_email_sent_at: sentAt });
+}
+
+/** Set after the internal new-order alert is sent. Needs supabase/orders-order-alert.sql. */
+export async function markOrderAlertSent(orderId: string, sentAt: string): Promise<void> {
+  await patchOrderBy("id", orderId, { order_alert_sent_at: sentAt });
 }
 
 /** Save carrier / tracking / fulfillment_status='shipped' for one order id. */

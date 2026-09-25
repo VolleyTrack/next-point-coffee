@@ -286,6 +286,33 @@ export async function sendCustomerMail(input: {
 }
 
 /**
+ * Internal notification (e.g. the new-order alert) from GMAIL_USER to an
+ * explicit inbox. Throws when Gmail is not configured or the send fails so the
+ * caller can log it; callers must catch.
+ */
+export async function sendInternalMail(input: {
+  to: string;
+  replyTo?: string | null;
+  subject: string;
+  text: string;
+  html: string;
+}): Promise<void> {
+  const user = process.env.GMAIL_USER;
+  const t = getTransporter();
+  if (!t || !user) {
+    throw new Error("GMAIL_USER or GMAIL_APP_PASSWORD is not set.");
+  }
+  await t.sendMail({
+    from: `"Next Point Coffee Orders" <${user}>`,
+    to: input.to,
+    replyTo: input.replyTo || undefined,
+    subject: input.subject,
+    text: input.text,
+    html: input.html,
+  });
+}
+
+/**
  * Ops alert when a paid customer's confirmation email did not send.
  * Same Gmail account and NOTIFY_EMAIL inbox as other site alerts. Does not throw.
  */
