@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
+import { useBotTrap } from "@/components/bot-trap";
 
 const fieldClass = "border-gold/30 bg-np-black text-np-cream";
 const selectClass = "flex h-10 w-full rounded-md border border-gold/30 bg-np-black px-3 text-sm text-np-cream";
@@ -13,6 +14,7 @@ const selectClass = "flex h-10 w-full rounded-md border border-gold/30 bg-np-bla
 export function CampaignRequestForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState("");
+  const trap = useBotTrap();
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -32,6 +34,7 @@ export function CampaignRequestForm() {
           city: String(fd.get("city") ?? ""),
           athleteName: String(fd.get("athleteName") ?? ""),
           notes: String(fd.get("notes") ?? ""),
+          ...trap.payload(),
         }),
       });
       const data = await res.json();
@@ -67,6 +70,7 @@ export function CampaignRequestForm() {
 
   return (
     <form onSubmit={submit} className="rounded-lg border border-gold/20 bg-card p-6 sm:p-8">
+      {trap.field}
       <h2 className="text-xl font-black text-np-cream">Club / nonprofit details</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Tell Next Point Coffee who you are. We do not publish an open list of live campaigns.
