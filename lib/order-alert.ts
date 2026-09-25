@@ -51,8 +51,13 @@ export interface OrderAlertContext {
   discountCents?: number | null;
   /** Unix seconds (Stripe `created`) or ISO string. Falls back to order.created_at. */
   placedAt?: number | string | null;
-  /** "renewal" for subscription invoices (PR #23). */
+  /** "renewal" for subscription invoices. */
   kind?: "order" | "renewal";
+  /**
+   * Subscription plan line, e.g. "Every 4 weeks · First Serve · delivery 3".
+   * Set for the first subscription checkout and for renewals; null for one-time orders.
+   */
+  subscription?: string | null;
   /**
    * Whether the row was already paid before this webhook saved it. Used to
    * dedupe when order_alert_sent_at does not exist yet. null = unknown.
@@ -133,7 +138,8 @@ export function buildOrderAlertEmail(
   const placed = formatEasternTime(context.placedAt ?? null) ?? formatEasternTime(order.created_at ?? null) ?? "—";
   const number = orderNumber(order.id);
   const renewal = context.kind === "renewal";
-  const heading = renewal ? "New subscription renewal" : "New order";
+  const subscription = oneLine(context.subscription);
+  const heading = renewal ? "New subscription renewal" : subscription ? "New subscription" : "New order";
   const campaign = order.channel === "campaign" ? oneLine(order.campaign_name) ?? "campaign" : null;
 
   const subject = oneLine(`${heading}: ${subjectItems(lines)} - ${money(order.amount_total)} - ${who}`) ?? heading;
@@ -162,6 +168,7 @@ export function buildOrderAlertEmail(
     "",
     `Order: ${number} (${order.id})`,
     `Stripe ${renewal ? "invoice" : "session"}: ${order.stripe_session_id}`,
+    ...(subscription ? [`Subscription: ${subscription}`] : []),
     ...(campaign ? [`Campaign: ${campaign}`] : []),
     `Placed: ${placed}`,
     "",
@@ -185,6 +192,7 @@ export function buildOrderAlertEmail(
     orderId: order.id,
     stripeLabel: renewal ? "Stripe invoice" : "Stripe session",
     stripeId: order.stripe_session_id,
+    subscription,
     campaign,
     placed,
   });
@@ -317,6 +325,7 @@ function renderHtml(input: {
   orderId: string;
   stripeLabel: string;
   stripeId: string;
+  subscription: string | null;
   campaign: string | null;
   placed: string;
 }): string {
@@ -398,6 +407,7 @@ function renderHtml(input: {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 ${detail("Order", `${escapeHtml(input.number)} <span style="color:#6b6259;">(${escapeHtml(input.orderId)})</span>`)}
                 ${detail(input.stripeLabel, escapeHtml(input.stripeId))}
+                ${input.subscription ? detail("Subscription", escapeHtml(input.subscription)) : ""}
                 ${input.campaign ? detail("Campaign", escapeHtml(input.campaign)) : ""}
                 ${detail("Placed", escapeHtml(input.placed))}
               </table>

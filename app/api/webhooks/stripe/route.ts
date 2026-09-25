@@ -8,6 +8,15 @@ import { sendOrderAlert, wasOrderPaid } from "@/lib/send-order-alert";
 import { sendOrderConfirmation } from "@/lib/send-order-confirmation";
 import { getStripe } from "@/lib/stripe";
 import { paidRetailPaymentSummary } from "@/lib/stripe-order-summary";
+import {
+  frequencyWeeks,
+  isSubscriptionRenewal,
+  renewalOrderInput,
+  selectionFromPlanMetadata,
+  subscriptionAlertLabel,
+  subscriptionCycleIndex,
+  subscriptionIdFromInvoice,
+} from "@/lib/subscription";
 import type Stripe from "stripe";
 
 export async function POST(request: Request) {
@@ -31,6 +40,13 @@ export async function POST(request: Request) {
   if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
     const session = event.data.object as Stripe.Checkout.Session;
     await handlePaidCheckout(session);
+  }
+
+  // Subscription renewals (every 2/4/6 weeks) become their own paid order.
+  // The first subscription payment is recorded by checkout.session.completed above.
+  if (event.type === "invoice.paid") {
+    const invoice = event.data.object as Stripe.Invoice;
+    if (isSubscriptionRenewal(invoice)) await handleSubscriptionRenewal(invoice);
   }
 
   if (event.type === "checkout.session.async_payment_failed") {
@@ -101,6 +117,7 @@ async function handlePaidCheckout(session: Stripe.Checkout.Session) {
           phone: fullSession.customer_details?.phone ?? null,
           discountCents: fullSession.total_details?.amount_discount ?? null,
           promoCode: await checkoutPromoCode(stripe, fullSession),
+          subscription: subscriptionAlertLabel(input.metadata),
         });
       } catch (err) {
         console.error("Internal order alert failed:", err instanceof Error ? err.message : err);
@@ -112,6 +129,67 @@ async function handlePaidCheckout(session: Stripe.Checkout.Session) {
       stripe_session_id: session.id,
       error: message,
     });
+  }
+}
+
+async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
+  try {
+    const subscriptionId = subscriptionIdFromInvoice(invoice);
+    if (!subscriptionId) {
+      booksIngestLog("error", "subscription.renewal.no_subscription", { invoice_id: invoice.id });
+      return;
+    }
+    const stripe = getStripe();
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId, { expand: ["customer"] });
+    const selection = selectionFromPlanMetadata(subscription.metadata);
+    if (!selection) {
+      booksIngestLog("warn", "subscription.renewal.not_coffee_plan", { invoice_id: invoice.id });
+      return;
+    }
+    const periodStart = invoice.lines?.data?.[0]?.period?.start ?? invoice.period_end;
+    const cycle = subscriptionCycleIndex(periodStart, subscription.billing_cycle_anchor, frequencyWeeks(selection.frequency));
+    const customer =
+      subscription.customer && typeof subscription.customer === "object" && !("deleted" in subscription.customer && subscription.customer.deleted)
+        ? (subscription.customer as Stripe.Customer)
+        : null;
+    const input = renewalOrderInput(
+      {
+        id: invoice.id ?? "",
+        created: invoice.status_transitions?.paid_at ?? invoice.created,
+        subtotal: invoice.subtotal,
+        amount_paid: invoice.amount_paid,
+        currency: invoice.currency,
+        customer_email: invoice.customer_email ?? customer?.email ?? null,
+        customer_name: invoice.customer_name ?? customer?.name ?? null,
+        customer_shipping: invoice.customer_shipping,
+        quantity: invoice.lines?.data?.[0]?.quantity ?? null,
+      },
+      selection,
+      cycle,
+      customer?.shipping ?? null
+    );
+    // Read before the upsert so a redelivered invoice.paid does not alert twice.
+    const wasPaidBefore = await wasOrderPaid(input.id);
+    // No pre-order confirmation email on renewals. Stripe sends the receipt.
+    const saved = await recordPaidCheckout(input, null);
+
+    // Internal alert to ORDER_ALERT_EMAIL for each renewal. Never throws.
+    if (saved.order?.payment_status === "paid") {
+      try {
+        await sendOrderAlert(saved.order, {
+          kind: "renewal",
+          wasPaidBefore,
+          placedAt: input.created,
+          phone: customer?.phone ?? null,
+          subscription: subscriptionAlertLabel(input.metadata),
+        });
+      } catch (err) {
+        console.error("Internal renewal alert failed:", err instanceof Error ? err.message : err);
+      }
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to record subscription renewal";
+    booksIngestLog("error", "orders.record.failed", { stripe_invoice_id: invoice.id, error: message });
   }
 }
 

@@ -35,6 +35,12 @@ export const flatShippingCents = 650;
  */
 export const retailMaxQuantity = 99;
 
+/**
+ * Sanity ceiling for one order line (books ingest). Subscriptions have no bag
+ * limit beyond this; the one-time shop still stops at retailMaxQuantity.
+ */
+export const orderLineMaxQuantity = 999;
+
 /** Whole bags in [1, retailMaxQuantity]. Non-numeric input becomes 1. */
 export function clampRetailQuantity(quantity: number): number {
   return Math.max(1, Math.min(retailMaxQuantity, Math.floor(quantity) || 1));
