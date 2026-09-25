@@ -33,6 +33,17 @@ export const coffeeChoices = [
 
 export type CoffeeChoiceId = (typeof coffeeChoices)[number]["id"];
 
+/** Shop cards offer a subscription for the single coffees; "Alternate both" lives on /subscribe. */
+export function isSubscribableSlug(slug: string): slug is "first-serve" | "second-wind" {
+  return subscriptionProducts.some((product) => product.slug === slug);
+}
+
+/** Purchase-type label on each shop card. */
+export const SHOP_SUBSCRIPTION_OFFER = `SAVE ${SUBSCRIBER_DISCOUNT_PERCENT}% with a Monthly Subscription`;
+
+/** Default delivery rhythm: every 4 weeks (monthly). */
+export const DEFAULT_FREQUENCY = "4wk" as const;
+
 export const frequencyOptions = [
   { id: "2wk", weeks: 2, label: "Every 2 weeks" },
   { id: "4wk", weeks: 4, label: "Every 4 weeks" },
@@ -42,7 +53,12 @@ export const frequencyOptions = [
 export type FrequencyId = (typeof frequencyOptions)[number]["id"];
 
 export const MIN_BAGS_PER_DELIVERY = 1;
-export const MAX_BAGS_PER_DELIVERY = 4;
+/** No real bag limit. 999 is only a sanity ceiling (typos, abuse), same in Checkout. */
+export const MAX_BAGS_PER_DELIVERY = 999;
+
+/** Shown on the explainer and next to the bag count in the builder. */
+export const SUBSCRIPTION_QUANTITY_COPY =
+  "Select Whole Bean or Ground, and how many you'd like to receive each month. 1, 2, 4, or 100, we're not judging.";
 
 export interface SubscriptionSelection {
   coffee: CoffeeChoiceId;
@@ -55,7 +71,7 @@ export const defaultSelection: SubscriptionSelection = {
   coffee: "first-serve",
   grind: "whole-bean",
   bags: 1,
-  frequency: "4wk",
+  frequency: DEFAULT_FREQUENCY,
 };
 
 export interface SubscriptionPrice {
@@ -228,10 +244,12 @@ export function subscriptionDeliveryMetadata(
   selection: SubscriptionSelection,
   cycleIndex: number
 ): Record<string, string> {
+  const bags = clampBags(selection.bags);
   const cart = resolveRetailCart([
-    { slug: deliverySlug(selection.coffee, cycleIndex), grind: selection.grind, quantity: clampBags(selection.bags) },
+    { slug: deliverySlug(selection.coffee, cycleIndex), grind: selection.grind, quantity: bags },
   ]);
-  const retail = cart.ok ? retailCheckoutMetadata(cart.lines) : {};
+  // The retail cart caps a line at the shop maximum; a subscription can go higher.
+  const retail = cart.ok ? retailCheckoutMetadata(cart.lines.map((line) => ({ ...line, quantity: bags }))) : {};
   return { ...retail, ...subscriptionPlanMetadata(selection), sub_cycle: String(Math.max(0, Math.floor(cycleIndex))) };
 }
 
@@ -271,6 +289,13 @@ export function subscriptionCheckoutSessionParams(
           recurring: { interval: "week", interval_count: frequencyWeeks(selection.frequency) },
         },
         quantity: price.bags,
+        // Shoppers can change the bag count on the Stripe page too. Renewals read the
+        // billed quantity from the invoice, so the plan metadata can't go stale.
+        adjustable_quantity: {
+          enabled: true,
+          minimum: MIN_BAGS_PER_DELIVERY,
+          maximum: MAX_BAGS_PER_DELIVERY,
+        },
       },
     ],
     shipping_address_collection: { allowed_countries: ["US"] },
@@ -309,6 +334,8 @@ export interface RenewalInvoice {
   customer_email: string | null;
   customer_name: string | null;
   customer_shipping?: { name?: string | null; address?: unknown } | null;
+  /** Billed bag count from the invoice line. Wins over the plan metadata (checkout or portal changes). */
+  quantity?: number | null;
 }
 
 /**
@@ -324,7 +351,9 @@ export function renewalOrderInput(
 ): CheckoutOrderInput {
   const slug = deliverySlug(selection.coffee, cycleIndex);
   const product = subscriptionProducts.find((entry) => entry.slug === slug);
-  const bags = clampBags(selection.bags);
+  const billed = Number(invoice.quantity);
+  const bags = clampBags(Number.isFinite(billed) && billed >= 1 ? billed : selection.bags);
+  const delivered: SubscriptionSelection = { ...selection, bags };
   const shipping = invoice.customer_shipping?.address ? invoice.customer_shipping : fallbackShipping ?? null;
   return {
     id: invoice.id,
@@ -344,7 +373,7 @@ export function renewalOrderInput(
         amount_total: invoice.amount_paid,
       },
     ],
-    metadata: subscriptionDeliveryMetadata(selection, cycleIndex),
+    metadata: subscriptionDeliveryMetadata(delivered, cycleIndex),
   };
 }
 

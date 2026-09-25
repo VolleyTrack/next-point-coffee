@@ -142,6 +142,7 @@ async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
         customer_email: invoice.customer_email ?? customer?.email ?? null,
         customer_name: invoice.customer_name ?? customer?.name ?? null,
         customer_shipping: invoice.customer_shipping,
+        quantity: invoice.lines?.data?.[0]?.quantity ?? null,
       },
       selection,
       cycle,
